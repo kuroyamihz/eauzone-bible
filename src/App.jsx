@@ -707,8 +707,8 @@ const ItemDetailsPage = ({ theme, openSearch }) => {
   return (
     <div className={`min-h-screen ${theme.bgApp} ${theme.textMain} flex flex-col md:flex-row transition-colors duration-500`}>
       
-      {/* 1. LEFT IMAGE SECTION (Sticky & Static) */}
-      <div className="w-full md:w-1/2 h-[50vh] md:h-screen sticky top-0 relative overflow-hidden group">
+      {/* 1. IMAGE SECTION (Mobile: Top / Desktop: Sticky Left) */}
+      <div className="w-full md:w-1/2 h-[45vh] md:h-screen md:sticky md:top-0 relative overflow-hidden group">
         {item.image ? (
           <img 
             src={item.image} 
@@ -720,55 +720,57 @@ const ItemDetailsPage = ({ theme, openSearch }) => {
             <ImageIcon size={64} className={`opacity-20 ${theme.textMain}`} />
           </div>
         )}
-        <div className="absolute inset-0 bg-gradient-to-r from-black/50 to-transparent pointer-events-none"></div>
+        {/* Dynamic Gradient for better button visibility */}
+        <div className="absolute inset-0 bg-gradient-to-b md:bg-gradient-to-r from-black/50 to-transparent pointer-events-none"></div>
         <button 
           onClick={() => navigate(-1)} 
-          className={`absolute top-8 left-8 p-4 rounded-full backdrop-blur-xl shadow-2xl z-20 ${theme.name === 'dark' ? 'bg-black/40 text-white hover:bg-white hover:text-black' : 'bg-white/60 text-black hover:bg-black hover:text-white'} transition-all hover:scale-110`}
+          className={`absolute top-6 left-6 md:top-8 md:left-8 p-3 md:p-4 rounded-full backdrop-blur-xl shadow-2xl z-20 ${theme.name === 'dark' ? 'bg-black/40 text-white hover:bg-white hover:text-black' : 'bg-white/60 text-black hover:bg-black hover:text-white'} transition-all hover:scale-110`}
         >
-          <ArrowLeft size={24} />
+          <ArrowLeft size={20} />
         </button>
       </div>
 
-      {/* 2. RIGHT CONTENT SECTION (Scrollable) */}
-      <div className="w-full md:w-1/2 p-10 md:p-20 flex flex-col justify-center overflow-y-auto animate-slide-in">
+      {/* 2. CONTENT SECTION (Mobile: Below / Desktop: Right Side) */}
+      <div className="w-full md:w-1/2 p-8 md:p-20 flex flex-col justify-center animate-slide-in">
         
+        {/* Category & Tags */}
         <div className="flex items-center gap-3 mb-6 animate-fade-in-up stagger-1">
-          <span className={`${theme.accent} tracking-[0.2em] uppercase text-xs font-bold flex items-center gap-2 border border-current px-3 py-1 rounded-full`}>
+          <span className={`${theme.accent} tracking-[0.2em] uppercase text-[10px] md:text-xs font-bold flex items-center gap-2 border border-current px-3 py-1 rounded-full`}>
             {getCategoryIcon(item.subCategory)} {item.subCategory}
           </span>
           {item.type && (
-            <span className={`px-3 py-1 rounded-full text-[10px] uppercase font-bold ${theme.cardBg} border ${theme.name === 'dark' ? 'border-white/10' : 'border-gray-300'}`}>
+            <span className={`px-3 py-1 rounded-full text-[10px] uppercase font-bold ${theme.cardBg} border ${theme.name === 'dark' ? 'border-white/10' : 'border-gray-200'}`}>
               {item.type}
             </span>
           )}
         </div>
 
-        <h1 className={`text-5xl md:text-7xl font-serif mb-6 leading-none ${theme.textMain} animate-fade-in-up stagger-2`}>
+        {/* Title & Price */}
+        <h1 className={`text-4xl md:text-7xl font-serif mb-4 md:mb-6 leading-tight ${theme.textMain} animate-fade-in-up stagger-2`}>
           {item.name}
         </h1>
-        
-        <div className="text-4xl font-light mb-10 animate-fade-in-up stagger-3">
-          {item.price} <span className="text-base opacity-50 font-bold">AED</span>
+        <div className="text-3xl md:text-4xl font-light mb-10 animate-fade-in-up stagger-3">
+          {item.price} <span className="text-sm md:text-base opacity-50 font-bold">AED</span>
         </div>
 
-        <div className="space-y-12 animate-fade-in-up stagger-4">
+        <div className="space-y-10 md:space-y-14 animate-fade-in-up stagger-4">
           {/* Description */}
           <div>
-            <h4 className={`text-xs font-bold uppercase tracking-widest ${theme.textMuted} mb-3 flex items-center gap-2`}>
+            <h4 className={`text-[10px] md:text-xs font-bold uppercase tracking-widest ${theme.textMuted} mb-3 flex items-center gap-2`}>
               <FileText size={14} /> Description
             </h4>
-            <p className="text-xl leading-relaxed opacity-90 font-light">{item.description}</p>
+            <p className="text-lg md:text-xl leading-relaxed opacity-90 font-light">{item.description}</p>
           </div>
 
-          {/* 2. Ingredients (Listed Style) */}
+          {/* Ingredients (Listed Style) */}
           {item.ingredients && (
             <div>
-              <h4 className={`text-xs font-bold uppercase tracking-widest ${theme.textMuted} mb-4 flex items-center gap-2`}>
-                <FileText size={14} /> Ingredients
+              <h4 className={`text-[10px] md:text-xs font-bold uppercase tracking-widest ${theme.textMuted} mb-4 flex items-center gap-2`}>
+                <UtensilsCrossed size={14} /> Ingredients
               </h4>
-              <ul className="space-y-2">
+              <ul className="space-y-3">
                 {item.ingredients.split(',').map((ing, i) => (
-                  <li key={i} className="flex items-start gap-3 opacity-80 font-light">
+                  <li key={i} className="flex items-start gap-3 opacity-80 font-light text-sm md:text-base">
                     <span className={`mt-2 w-1.5 h-1.5 rounded-full ${theme.accentBg}`}></span>
                     <span>{ing.trim()}</span>
                   </li>
@@ -779,27 +781,27 @@ const ItemDetailsPage = ({ theme, openSearch }) => {
 
           {/* Method / Notes */}
           {item.method && (
-            <div className={`p-8 rounded-2xl border ${theme.name === 'dark' ? "bg-white/5 border-white/10" : "bg-gray-50 border-gray-200"}`}>
-              <h4 className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest mb-4">
+            <div className={`p-6 md:p-8 rounded-2xl border ${theme.name === 'dark' ? "bg-white/5 border-white/10" : "bg-gray-50 border-gray-100"}`}>
+              <h4 className="flex items-center gap-2 text-[10px] md:text-xs font-bold uppercase tracking-widest mb-4">
                 <BookOpen size={16} /> Notes / Method
               </h4>
-              <p className="opacity-80 font-light whitespace-pre-wrap leading-relaxed">{item.method}</p>
+              <p className="text-sm md:text-base opacity-80 font-light whitespace-pre-wrap leading-relaxed">{item.method}</p>
             </div>
           )}
 
-          <div className="space-y-8">
-            {/* Allergens */}
+          <div className="space-y-10">
+            {/* Allergens (With Icons) */}
             {item.allergens && (
               <div>
-                <h4 className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-red-400 mb-3">
+                <h4 className="flex items-center gap-2 text-[10px] md:text-xs font-bold uppercase tracking-widest text-red-400 mb-4">
                   <AlertTriangle size={14} /> Allergens
                 </h4>
-                <div className="flex flex-wrap gap-3">
+                <div className="flex flex-wrap gap-2 md:gap-3">
                   {item.allergens.split(',').map(tag => (
                     <button 
                       key={tag} 
                       onClick={() => openSearch(tag.trim())} 
-                      className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold border hover:bg-red-500 hover:text-white transition-all hover:scale-105 shadow-sm ${theme.name === 'dark' ? 'border-red-900/50 text-red-200 bg-red-900/10' : 'border-red-200 text-red-600 bg-red-50'}`}
+                      className={`flex items-center gap-2 px-3 py-2 md:px-4 md:py-2 rounded-full text-[10px] md:text-xs font-bold border hover:bg-red-500 hover:text-white transition-all shadow-sm ${theme.name === 'dark' ? 'border-red-900/50 text-red-200 bg-red-900/10' : 'border-red-200 text-red-600 bg-red-50'}`}
                     >
                       {getAllergenIcon(tag)} {tag.trim()}
                     </button>
@@ -808,15 +810,15 @@ const ItemDetailsPage = ({ theme, openSearch }) => {
               </div>
             )}
 
-            {/* 3. Trivia (Centered) */}
+            {/* Trivia (Centered Style) */}
             {item.trivia && (
               <div className="pt-4">
-                <h4 className="flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest mb-4">
+                <h4 className="flex items-center justify-center gap-2 text-[10px] md:text-xs font-bold uppercase tracking-widest mb-6">
                   <Sparkles size={14} className="text-yellow-500" /> Trivia
                 </h4>
                 <ul className="space-y-4">
                   {item.trivia.split('.').filter(t => t.trim().length > 0).map((t, i) => (
-                    <li key={i} className="flex flex-col items-center text-center gap-3 text-sm opacity-90 italic bg-yellow-500/10 p-6 rounded-xl border border-yellow-500/20">
+                    <li key={i} className="flex flex-col items-center text-center gap-3 text-sm opacity-90 italic bg-yellow-500/10 p-6 md:p-8 rounded-2xl border border-yellow-500/20 shadow-inner">
                       <span className="text-yellow-500 text-xl">✨</span>
                       <span className="leading-relaxed">{t.trim()}</span>
                     </li>
