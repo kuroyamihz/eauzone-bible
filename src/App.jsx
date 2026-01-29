@@ -40,7 +40,7 @@ export default function App() {
 
           <div className={`fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] transition-opacity duration-500 ${sidebarOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`} onClick={() => setSidebarOpen(false)} />
           
-          <div className={`fixed inset-y-0 left-0 w-80 ${theme.bgApp} border-r shadow-2xl ${theme.name==='dark'?'border-[#233554]':'border-gray-200'} transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-500 cubic-bezier(0.16, 1, 0.3, 1) z-[61] p-8 flex flex-col`}>
+          <div className={``fixed inset-y-0 left-0 w-[85vw] md:w-80 ${theme.bgApp} border-r shadow-2xl ${theme.name==='dark'?'border-[#233554]':'border-gray-200'} transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-500 cubic-bezier(0.16, 1, 0.3, 1) z-[61] p-8 flex flex-col`}>
              <div className="flex justify-between items-center mb-10">
                  <span className="font-serif text-xl tracking-widest opacity-50">MENU</span>
                  <button onClick={() => setSidebarOpen(false)} className={`p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition ${theme.textMain}`}><X /></button>
@@ -432,16 +432,16 @@ const AddItemForm = ({ category, onCancel, onRefresh, showToast, theme, initialD
                      ))}
                    </div>
                 )}
-                <div className="grid grid-cols-2 gap-5">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-10">
                     <div className="space-y-1"><label className={`text-xs font-bold uppercase ${theme.textMuted}`}>Name</label><input value={data.name} className={`w-full p-3 rounded-xl ${theme.inputBg} outline-none transition-all focus:ring-2 ring-opacity-50`} onChange={e=>setData({...data, name: e.target.value})} required/></div>
                     <div className="space-y-1"><label className={`text-xs font-bold uppercase ${theme.textMuted}`}>Price (AED)</label><input type="number" value={data.price} className={`w-full p-3 rounded-xl ${theme.inputBg} outline-none transition-all focus:ring-2 ring-opacity-50`} onChange={e=>setData({...data, price: e.target.value})} required/></div>
                 </div>
                 <div className="space-y-1"><label className={`text-xs font-bold uppercase ${theme.textMuted}`}>Description</label><textarea value={data.description} className={`w-full p-3 rounded-xl ${theme.inputBg} outline-none h-24 resize-none transition-all focus:ring-2 ring-opacity-50`} onChange={e=>setData({...data, description: e.target.value})}/></div>
-                <div className="grid grid-cols-2 gap-5">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-10">
                     <div className="space-y-1"><label className={`text-xs font-bold uppercase ${theme.textMuted}`}>Ingredients</label><textarea value={data.ingredients} className={`w-full p-3 rounded-xl ${theme.inputBg} outline-none h-24 resize-none`} onChange={e=>setData({...data, ingredients: e.target.value})}/></div>
                     <div className="space-y-1"><label className={`text-xs font-bold uppercase ${theme.textMuted}`}>Method/Notes</label><textarea value={data.method} className={`w-full p-3 rounded-xl ${theme.inputBg} outline-none h-24 resize-none`} onChange={e=>setData({...data, method: e.target.value})}/></div>
                 </div>
-                <div className="grid grid-cols-2 gap-5">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-10">
     {/* LEFT: Allergens with Suggestions */}
     <div className="space-y-1">
         <label className={`text-xs font-bold uppercase ${theme.textMuted}`}>Allergens</label>
@@ -601,9 +601,9 @@ const HomePage = ({ openSearch, theme }) => {
         <span className={`${theme.accent} tracking-[0.5em] text-xs font-bold uppercase mb-6 animate-fade-in-up stagger-1`}>The Official</span>
 {/* Removed 'text-white' below so it inherits theme.textMain */}
 {/* Switched 'text-white' to '${theme.textMain}' */}
-<h1 className={`font-serif text-7xl md:text-9xl mb-8 tracking-tighter ${theme.textMain} drop-shadow-2xl animate-fade-in-up stagger-2`}>Bible</h1>
+<h1 className={`font-serif text-6xl md:text-9xl mb-6 tracking-tighter ${theme.textMain} drop-shadow-2xl animate-fade-in-up stagger-2`}>Bible</h1>
 {/* Removed 'text-white/90' below */}
-<p className="max-w-md text-lg md:text-xl font-light leading-relaxed opacity-90 mb-12 drop-shadow-md animate-fade-in-up stagger-3">Floating between the sky and sea, Eauzone offers modern Asian cuisine with an elegant twist.</p>
+<p className="max-w-xs md:max-w-md text-base md:text-xl font-light leading-relaxed opacity-90 mb-12 drop-shadow-md animate-fade-in-up stagger-3">Floating between the sky and sea, Eauzone offers modern Asian cuisine with an elegant twist.</p>
            <button onClick={openSearch} className={`group flex items-center gap-4 backdrop-blur-md border px-10 py-5 rounded-full hover:bg-white/20 transition-all shadow-2xl animate-fade-in-up stagger-4 ${theme.name==='light' ? 'bg-white/80 border-white text-gray-900' : 'bg-white/10 border-white/30 text-white'}`}>
              <Search size={22} className={theme.name==='light'?'text-gray-900':theme.accent} />
              <span className="font-light tracking-widest text-sm">SEARCH MENU</span>
