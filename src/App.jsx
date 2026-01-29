@@ -22,32 +22,61 @@ export default function App() {
   const [toast, setToast] = useState(null);
 
   const theme = isDark ? THEMES.dark : THEMES.light;
-  const triggerToast = (msg, type) => { setToast({ message: msg, type }); setTimeout(() => setToast(null), 3000); };
+  const triggerToast = (msg, type) => { 
+    setToast({ message: msg, type }); 
+    setTimeout(() => setToast(null), 3000); 
+  };
   const openSearchWithTerm = (term) => { setSearchExpanded(true); };
+
+  // Sync Tailwind dark mode class with state
+  useEffect(() => {
+    if (isDark) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [isDark]);
 
   return (
     <Router>
       <GlobalStyles theme={theme} />
       
-      {/* --- THE BRILLIANT FIX: COLOR BLOCK WRAPPER --- */}
-      {/* min-h-screen ensures the color stretches even if you scroll */}
+      {/* THE COLOR BLOCK WRAPPER */}
       <div className={`min-h-screen w-full transition-colors duration-500 ${theme.bgApp} ${theme.textMain}`}>
           
+          {/* TOP NAV LOGIC */}
           <Routes>
               <Route path="/item/:itemId" element={null} /> 
-              <Route path="*" element={ <Navbar toggleSidebar={() => setSidebarOpen(true)} toggleLogin={() => isAdmin ? setIsAdmin(false) : setShowLogin(true)} isSearchOpen={searchExpanded} openSearch={() => setSearchExpanded(true)} closeSearch={() => setSearchExpanded(false)} toggleTheme={() => setIsDark(!isDark)} isAdmin={isAdmin} theme={theme} /> } />
+              <Route path="*" element={ 
+                <Navbar 
+                  toggleSidebar={() => setSidebarOpen(true)} 
+                  toggleLogin={() => isAdmin ? setIsAdmin(false) : setShowLogin(true)} 
+                  isSearchOpen={searchExpanded} 
+                  openSearch={() => setSearchExpanded(true)} 
+                  closeSearch={() => setSearchExpanded(false)} 
+                  toggleTheme={() => setIsDark(!isDark)} 
+                  isAdmin={isAdmin} 
+                  theme={theme} 
+                /> 
+              } />
           </Routes>
 
-          <div className={`fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] transition-opacity duration-500 ${sidebarOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`} onClick={() => setSidebarOpen(false)} />
+          {/* SIDEBAR OVERLAY */}
+          <div 
+            className={`fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] transition-opacity duration-500 ${sidebarOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`} 
+            onClick={() => setSidebarOpen(false)} 
+          />
           
-          <div className={``fixed inset-y-0 left-0 w-[85vw] md:w-80 ${theme.bgApp} border-r shadow-2xl ${theme.name==='dark'?'border-[#233554]':'border-gray-200'} transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-500 cubic-bezier(0.16, 1, 0.3, 1) z-[61] p-8 flex flex-col`}>
+          {/* SIDEBAR DRAWER - Fixed Bracket & Syntax here */}
+          <div className={`fixed inset-y-0 left-0 w-[85vw] md:w-80 ${theme.bgApp} border-r shadow-2xl ${theme.name==='dark'?'border-[#233554]':'border-gray-200'} transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-500 cubic-bezier(0.16, 1, 0.3, 1) z-[61] p-8 flex flex-col`}>
              <div className="flex justify-between items-center mb-10">
                  <span className="font-serif text-xl tracking-widest opacity-50">MENU</span>
                  <button onClick={() => setSidebarOpen(false)} className={`p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition ${theme.textMain}`}><X /></button>
              </div>
+
              <div className="flex-1 overflow-y-auto space-y-10 hide-scrollbar">
                 {Object.entries(SITE_STRUCTURE).map(([parent, subs], idx) => (
-                    <div key={parent} className={`animate-fade-in-up`} style={{animationDelay: `${idx * 100}ms`}}>
+                    <div key={parent} className="animate-fade-in-up" style={{animationDelay: `${idx * 100}ms`}}>
                         <h3 className={`text-xs font-bold ${theme.textMuted} uppercase tracking-[0.2em] mb-6 flex items-center gap-2`}>
                             {parent === "Food" && <UtensilsCrossed size={14}/>}
                             {parent === "Beverage" && <Martini size={14}/>}
@@ -57,7 +86,11 @@ export default function App() {
                         <ul className={`space-y-4 pl-4 border-l-2 ${theme.name==='dark'?'border-[#233554]':'border-gray-100'}`}>
                             {subs.map(sub => (
                                 <li key={sub}>
-                                    <Link to={`/category/${sub}`} onClick={() => setSidebarOpen(false)} className={`text-lg ${theme.textMain} opacity-70 hover:opacity-100 hover:translate-x-2 transition-all duration-300 flex items-center gap-3 group`}>
+                                    <Link 
+                                      to={`/category/${sub}`} 
+                                      onClick={() => setSidebarOpen(false)} 
+                                      className={`text-lg ${theme.textMain} opacity-70 hover:opacity-100 hover:translate-x-2 transition-all duration-300 flex items-center gap-3 group`}
+                                    >
                                         <span className="opacity-0 group-hover:opacity-100 transition-opacity text-xs -ml-4">{theme.name==='dark'?'Now':'->'}</span>
                                         {sub.replace('-', ' ')}
                                     </Link>
@@ -69,9 +102,11 @@ export default function App() {
              </div>
           </div>
 
+          {/* MODALS & TOASTS */}
           <LoginModal isOpen={showLogin} onClose={() => setShowLogin(false)} onLogin={setIsAdmin} showToast={triggerToast} theme={theme} />
           <Toast message={toast?.message} type={toast?.type} />
 
+          {/* MAIN PAGE CONTENT */}
           <Routes>
             <Route path="/" element={<HomePage openSearch={() => setSearchExpanded(true)} theme={theme} />} />
             <Route path="/category/:id" element={<CategoryPage isAdmin={isAdmin} showToast={triggerToast} theme={theme} />} />
@@ -79,8 +114,6 @@ export default function App() {
           </Routes>
 
       </div> 
-      {/* --- END OF COLOR BLOCK WRAPPER --- */}
-
     </Router>
   );
 }
@@ -653,9 +686,9 @@ const CategoryPage = ({ isAdmin, showToast, theme }) => {
 
         <div className="max-w-7xl mx-auto px-6 -mt-16 relative z-10 pb-24">
             <div className="flex flex-col md:flex-row justify-center md:justify-between items-center mb-12 gap-6">
-                 <div className="flex gap-3 overflow-x-auto hide-scrollbar p-2">
+                 <div className="flex flex-nowrap gap-3 overflow-x-auto hide-scrollbar p-2 -mx-6 px-6">
                     {hasSubs && ["All", ...subs].map(f => (
-                        <button key={f} onClick={() => setFilter(f)} className={`px-6 py-2 rounded-full text-xs font-bold backdrop-blur-md border transition-all shadow-lg hover:-translate-y-1 ${filter===f ? theme.accentBg + " text-white border-transparent" : "bg-white/10 border-white/20 text-white hover:bg-white/20"}`}>{f}</button>
+                        <button key={f} onClick={() => setFilter(f)} className={`flex-shrink-0 px-6 py-2 rounded-full text-xs font-bold backdrop-blur-md border transition-all shadow-lg hover:-translate-y-1 ${filter===f ? theme.accentBg + " text-white border-transparent" : "bg-white/10 border-white/20 text-white hover:bg-white/20"}`}>{f}</button>
                     ))}
                  </div>
                  {isAdmin && !showAdd && !editingItem && <button onClick={() => setShowAdd(true)} className={`${theme.accentBg} text-white px-8 py-3 rounded-full font-bold shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all flex items-center gap-2`}><Plus size={18}/> Add New</button>}
@@ -671,7 +704,7 @@ const CategoryPage = ({ isAdmin, showToast, theme }) => {
                     {isAdmin && (<div className="absolute top-3 right-3 flex gap-2 z-20"><button onClick={(e) => { e.preventDefault(); setEditingItem(item); }} className="bg-blue-600 text-white p-2 rounded-full shadow-lg hover:scale-110 transition"><Edit2 size={16}/></button><button onClick={(e) => { e.preventDefault(); setDeleteId(item.id); }} className="bg-red-600 text-white p-2 rounded-full shadow-lg hover:scale-110 transition"><Trash2 size={16}/></button></div>)}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 </div>
-                <div className="flex justify-between items-start px-2">
+                <div className="flex flex-col md:flex-row justify-between items-start gap-2 px-2">
                     <div><h3 className={`text-2xl font-serif group-hover:${theme.accent} transition duration-300`}>{item.name}</h3><p className={`line-clamp-1 ${theme.textMuted} text-sm mt-1`}>{item.description}</p></div>
                     <span className="text-xl font-light whitespace-nowrap bg-black/5 dark:bg-white/10 px-3 py-1 rounded-lg">{item.price} <span className="text-xs font-bold">AED</span></span>
                 </div>
@@ -707,8 +740,8 @@ const ItemDetailsPage = ({ theme, openSearch }) => {
   return (
     <div className={`min-h-screen ${theme.bgApp} ${theme.textMain} flex flex-col md:flex-row transition-colors duration-500`}>
       
-      {/* 1. IMAGE SECTION (Mobile: Top / Desktop: Sticky Left) */}
-      <div className="w-full md:w-1/2 h-[45vh] md:h-screen md:sticky md:top-0 relative overflow-hidden group">
+      {/* 1. IMAGE SECTION: Optimized for Mobile Height */}
+      <div className="w-full md:w-1/2 h-[40vh] md:h-screen md:sticky md:top-0 relative overflow-hidden group">
         {item.image ? (
           <img 
             src={item.image} 
@@ -720,8 +753,10 @@ const ItemDetailsPage = ({ theme, openSearch }) => {
             <ImageIcon size={64} className={`opacity-20 ${theme.textMain}`} />
           </div>
         )}
-        {/* Dynamic Gradient for better button visibility */}
-        <div className="absolute inset-0 bg-gradient-to-b md:bg-gradient-to-r from-black/50 to-transparent pointer-events-none"></div>
+        
+        {/* Dynamic Gradient: Vertical on mobile to help the back button pop */}
+        <div className="absolute inset-0 bg-gradient-to-b md:bg-gradient-to-r from-black/60 via-transparent to-transparent pointer-events-none"></div>
+        
         <button 
           onClick={() => navigate(-1)} 
           className={`absolute top-6 left-6 md:top-8 md:left-8 p-3 md:p-4 rounded-full backdrop-blur-xl shadow-2xl z-20 ${theme.name === 'dark' ? 'bg-black/40 text-white hover:bg-white hover:text-black' : 'bg-white/60 text-black hover:bg-black hover:text-white'} transition-all hover:scale-110`}
@@ -730,48 +765,50 @@ const ItemDetailsPage = ({ theme, openSearch }) => {
         </button>
       </div>
 
-      {/* 2. CONTENT SECTION (Mobile: Below / Desktop: Right Side) */}
-      <div className="w-full md:w-1/2 p-8 md:p-20 flex flex-col justify-center animate-slide-in">
+      {/* 2. CONTENT SECTION: Fixed Mobile Overlap & Padding */}
+      <div className="w-full md:w-1/2 p-6 md:p-20 flex flex-col animate-slide-in">
         
-        {/* Category & Tags */}
-        <div className="flex items-center gap-3 mb-6 animate-fade-in-up stagger-1">
-          <span className={`${theme.accent} tracking-[0.2em] uppercase text-[10px] md:text-xs font-bold flex items-center gap-2 border border-current px-3 py-1 rounded-full`}>
+        {/* Category & Tags: Scaled down for mobile */}
+        <div className="flex items-center gap-2 mb-4 md:mb-6 animate-fade-in-up stagger-1">
+          <span className={`${theme.accent} tracking-[0.1em] uppercase text-[9px] md:text-xs font-bold flex items-center gap-1.5 border border-current px-2.5 py-1 rounded-full`}>
             {getCategoryIcon(item.subCategory)} {item.subCategory}
           </span>
           {item.type && (
-            <span className={`px-3 py-1 rounded-full text-[10px] uppercase font-bold ${theme.cardBg} border ${theme.name === 'dark' ? 'border-white/10' : 'border-gray-200'}`}>
+            <span className={`px-2.5 py-1 rounded-full text-[9px] uppercase font-bold ${theme.cardBg} border ${theme.name === 'dark' ? 'border-white/10' : 'border-gray-200'}`}>
               {item.type}
             </span>
           )}
         </div>
 
-        {/* Title & Price */}
-        <h1 className={`text-4xl md:text-7xl font-serif mb-4 md:mb-6 leading-tight ${theme.textMain} animate-fade-in-up stagger-2`}>
+        {/* Title & Price: Responsive Sizing */}
+        <h1 className={`text-3xl md:text-7xl font-serif mb-2 md:mb-6 leading-tight ${theme.textMain} animate-fade-in-up stagger-2`}>
           {item.name}
         </h1>
-        <div className="text-3xl md:text-4xl font-light mb-10 animate-fade-in-up stagger-3">
-          {item.price} <span className="text-sm md:text-base opacity-50 font-bold">AED</span>
+        <div className="text-2xl md:text-4xl font-light mb-8 md:mb-12 animate-fade-in-up stagger-3">
+          {item.price} <span className="text-xs md:text-base opacity-50 font-bold">AED</span>
         </div>
 
-        <div className="space-y-10 md:space-y-14 animate-fade-in-up stagger-4">
+        {/* Info Blocks: Tighter on mobile, Airy on desktop */}
+        <div className="space-y-8 md:space-y-14 animate-fade-in-up stagger-4">
+          
           {/* Description */}
           <div>
-            <h4 className={`text-[10px] md:text-xs font-bold uppercase tracking-widest ${theme.textMuted} mb-3 flex items-center gap-2`}>
+            <h4 className={`text-[10px] md:text-xs font-bold uppercase tracking-widest ${theme.textMuted} mb-2 md:mb-3 flex items-center gap-2`}>
               <FileText size={14} /> Description
             </h4>
-            <p className="text-lg md:text-xl leading-relaxed opacity-90 font-light">{item.description}</p>
+            <p className="text-base md:text-xl leading-relaxed opacity-90 font-light">{item.description}</p>
           </div>
 
-          {/* Ingredients (Listed Style) */}
+          {/* Ingredients */}
           {item.ingredients && (
             <div>
-              <h4 className={`text-[10px] md:text-xs font-bold uppercase tracking-widest ${theme.textMuted} mb-4 flex items-center gap-2`}>
+              <h4 className={`text-[10px] md:text-xs font-bold uppercase tracking-widest ${theme.textMuted} mb-3 md:mb-4 flex items-center gap-2`}>
                 <UtensilsCrossed size={14} /> Ingredients
               </h4>
-              <ul className="space-y-3">
+              <ul className="grid grid-cols-1 gap-2 md:gap-3">
                 {item.ingredients.split(',').map((ing, i) => (
                   <li key={i} className="flex items-start gap-3 opacity-80 font-light text-sm md:text-base">
-                    <span className={`mt-2 w-1.5 h-1.5 rounded-full ${theme.accentBg}`}></span>
+                    <span className={`mt-2 w-1.5 h-1.5 rounded-full flex-shrink-0 ${theme.accentBg}`}></span>
                     <span>{ing.trim()}</span>
                   </li>
                 ))}
@@ -779,21 +816,21 @@ const ItemDetailsPage = ({ theme, openSearch }) => {
             </div>
           )}
 
-          {/* Method / Notes */}
+          {/* Method / Notes: Better mobile padding */}
           {item.method && (
-            <div className={`p-6 md:p-8 rounded-2xl border ${theme.name === 'dark' ? "bg-white/5 border-white/10" : "bg-gray-50 border-gray-100"}`}>
-              <h4 className="flex items-center gap-2 text-[10px] md:text-xs font-bold uppercase tracking-widest mb-4">
+            <div className={`p-5 md:p-8 rounded-2xl border ${theme.name === 'dark' ? "bg-white/5 border-white/10" : "bg-gray-50 border-gray-100"}`}>
+              <h4 className="flex items-center gap-2 text-[10px] md:text-xs font-bold uppercase tracking-widest mb-3 md:mb-4">
                 <BookOpen size={16} /> Notes / Method
               </h4>
-              <p className="text-sm md:text-base opacity-80 font-light whitespace-pre-wrap leading-relaxed">{item.method}</p>
+              <p className="text-xs md:text-base opacity-80 font-light whitespace-pre-wrap leading-relaxed">{item.method}</p>
             </div>
           )}
 
-          <div className="space-y-10">
-            {/* Allergens (With Icons) */}
+          <div className="space-y-8 md:space-y-10">
+            {/* Allergens: flex-wrap ensures they don't break the layout */}
             {item.allergens && (
               <div>
-                <h4 className="flex items-center gap-2 text-[10px] md:text-xs font-bold uppercase tracking-widest text-red-400 mb-4">
+                <h4 className="flex items-center gap-2 text-[10px] md:text-xs font-bold uppercase tracking-widest text-red-400 mb-3 md:mb-4">
                   <AlertTriangle size={14} /> Allergens
                 </h4>
                 <div className="flex flex-wrap gap-2 md:gap-3">
@@ -801,7 +838,7 @@ const ItemDetailsPage = ({ theme, openSearch }) => {
                     <button 
                       key={tag} 
                       onClick={() => openSearch(tag.trim())} 
-                      className={`flex items-center gap-2 px-3 py-2 md:px-4 md:py-2 rounded-full text-[10px] md:text-xs font-bold border hover:bg-red-500 hover:text-white transition-all shadow-sm ${theme.name === 'dark' ? 'border-red-900/50 text-red-200 bg-red-900/10' : 'border-red-200 text-red-600 bg-red-50'}`}
+                      className={`flex items-center gap-1.5 md:gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full text-[10px] md:text-xs font-bold border transition-all active:scale-95 ${theme.name === 'dark' ? 'border-red-900/50 text-red-200 bg-red-900/10' : 'border-red-200 text-red-600 bg-red-50'}`}
                     >
                       {getAllergenIcon(tag)} {tag.trim()}
                     </button>
@@ -810,16 +847,16 @@ const ItemDetailsPage = ({ theme, openSearch }) => {
               </div>
             )}
 
-            {/* Trivia (Centered Style) */}
+            {/* Trivia: Centered & Space-optimized */}
             {item.trivia && (
-              <div className="pt-4">
-                <h4 className="flex items-center justify-center gap-2 text-[10px] md:text-xs font-bold uppercase tracking-widest mb-6">
+              <div className="pt-2 md:pt-4">
+                <h4 className="flex items-center justify-center gap-2 text-[10px] md:text-xs font-bold uppercase tracking-widest mb-4 md:mb-6">
                   <Sparkles size={14} className="text-yellow-500" /> Trivia
                 </h4>
-                <ul className="space-y-4">
+                <ul className="space-y-3 md:space-y-4">
                   {item.trivia.split('.').filter(t => t.trim().length > 0).map((t, i) => (
-                    <li key={i} className="flex flex-col items-center text-center gap-3 text-sm opacity-90 italic bg-yellow-500/10 p-6 md:p-8 rounded-2xl border border-yellow-500/20 shadow-inner">
-                      <span className="text-yellow-500 text-xl">✨</span>
+                    <li key={i} className="flex flex-col items-center text-center gap-2 md:gap-3 text-xs md:text-sm opacity-90 italic bg-yellow-500/10 p-5 md:p-8 rounded-2xl border border-yellow-500/20">
+                      <span className="text-yellow-500 text-lg md:text-xl">✨</span>
                       <span className="leading-relaxed">{t.trim()}</span>
                     </li>
                   ))}
