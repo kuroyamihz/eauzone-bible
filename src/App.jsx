@@ -645,54 +645,81 @@ const HomePage = ({ openSearch, theme }) => {
   );
 };
 
-return (
-  <div className={`min-h-screen ${theme.bgApp} ${theme.textMain} transition-colors duration-500`}>
-    
-    {/* --- RESTORED HERO SECTION --- */}
-    <div className="relative h-[40vh] md:h-[50vh] w-full overflow-hidden flex items-center justify-center text-center">
-         {/* Background Image */}
-         <img 
-            src={bgImage} 
-            className="absolute inset-0 w-full h-full object-cover transition-all duration-1000 animate-scale-in" 
-            style={{animationDuration: '5s'}} 
-            alt="Category Background"
-         />
-         {/* The Dark Overlay to make text readable */}
-         <div className={`absolute inset-0 ${theme.heroOverlay} bg-black/40`}></div>
-         
-         <div className="relative z-10 px-6 animate-fade-in-up">
-             {/* Icon Section */}
-             <div className="flex justify-center mb-4 text-white/80 scale-75 md:scale-100">
-                {getCategoryIcon(id)}
-             </div>
-             
-             {/* Title */}
-             <h1 className="text-4xl md:text-7xl font-serif text-white drop-shadow-2xl mb-4 capitalize">
-                {id.replace('-', ' ')}
-             </h1>
-             
-             {/* Description */}
-             <p className="text-white/90 text-sm md:text-xl font-light max-w-lg mx-auto drop-shadow-md leading-relaxed px-4">
-                {description}
-             </p>
-         </div>
-    </div>
+const CategoryPage = ({ isAdmin, showToast, theme }) => {
+  const { id } = useParams();
+  const [items, setItems] = useState([]);
+  const [showAdd, setShowAdd] = useState(false);
+  const [editingItem, setEditingItem] = useState(null);
+  const [filter, setFilter] = useState("All");
+  const [deleteId, setDeleteId] = useState(null);
 
-    {/* CONTENT SECTION: Uses -mt-12 to overlap the hero slightly */}
-    <div className="max-w-7xl mx-auto px-6 -mt-12 relative z-20 pb-24">
-        
-        {/* HORIZONTAL SCROLL FIX (Mobile optimized) - IMPLEMENTED EXACTLY */}
+  const subs = SUBCATEGORIES[id] || [];
+  const hasSubs = subs.length > 0;
+  const description = DESCRIPTIONS[filter !== "All" ? `${id}-${filter}` : id] || "Curated selection.";
+  const bgImage = getBackground(id, filter !== "All" ? filter : "");
+
+  const fetchItems = async () => {
+    const q = query(collection(db, "menu-items"), where("subCategory", "==", id));
+    const snapshot = await getDocs(q);
+    setItems(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+  };
+
+  useEffect(() => {
+    fetchItems();
+    setFilter("All");
+  }, [id]);
+
+  const handleDelete = async () => {
+    if (deleteId) {
+      await deleteDoc(doc(db, "menu-items", deleteId));
+      fetchItems();
+      showToast("Deleted", "success");
+      setDeleteId(null);
+    }
+  };
+
+  const displayedItems =
+    hasSubs && filter !== "All" ? items.filter((i) => i.type === filter) : items;
+
+  return (
+    <div className={`min-h-screen ${theme.bgApp} ${theme.textMain} transition-colors duration-500`}>
+      {/* --- HERO SECTION --- */}
+      <div className="relative h-[40vh] md:h-[50vh] w-full overflow-hidden flex items-center justify-center text-center">
+        <img
+          src={bgImage}
+          className="absolute inset-0 w-full h-full object-cover transition-all duration-1000 animate-scale-in"
+          style={{ animationDuration: "5s" }}
+          alt="Category Background"
+        />
+        <div className={`absolute inset-0 ${theme.heroOverlay} bg-black/40`}></div>
+
+        <div className="relative z-10 px-6 animate-fade-in-up">
+          <div className="flex justify-center mb-4 text-white/80 scale-75 md:scale-100">
+            {getCategoryIcon(id)}
+          </div>
+          <h1 className="text-4xl md:text-7xl font-serif text-white drop-shadow-2xl mb-4 capitalize">
+            {id.replace("-", " ")}
+          </h1>
+          <p className="text-white/90 text-sm md:text-xl font-light max-w-lg mx-auto drop-shadow-md leading-relaxed px-4">
+            {description}
+          </p>
+        </div>
+      </div>
+
+      {/* CONTENT SECTION */}
+      <div className="max-w-7xl mx-auto px-6 -mt-12 relative z-20 pb-24">
+        {/* HORIZONTAL SCROLL — EXACT */}
         {hasSubs && (
           <div className="relative mb-12 animate-fade-in-up stagger-1">
-            <div className="flex flex-nowrap gap-3 overflow-x-auto hide-scrollbar -mx-6 px-6">
-              {["All", ...subs].map(f => (
+            <div className="flex flex-nowrap gap-2 md:gap-3 overflow-x-auto hide-scrollbar p-2 -mx-6 px-6 w-full">
+              {["All", ...subs].map((f) => (
                 <button
                   key={f}
                   onClick={() => setFilter(f)}
-                  className={`flex-shrink-0 px-8 py-3 rounded-full text-sm font-bold border transition-all duration-300 ${
-                    filter === f 
-                    ? `${theme.accentBg} text-white border-transparent shadow-lg scale-105` 
-                    : `backdrop-blur-md ${theme.name==='dark' ? 'border-white/10 text-white/60' : 'border-gray-200 text-gray-500'} hover:border-current`
+                  className={`flex-shrink-0 px-5 py-2 md:px-6 md:py-2 rounded-full text-[10px] md:text-xs font-bold backdrop-blur-md border transition-all shadow-lg ${
+                    filter === f
+                      ? `${theme.accentBg} text-white border-transparent`
+                      : "bg-white/10 border-white/20 text-white hover:bg-white/20"
                   }`}
                 >
                   {f}
@@ -704,67 +731,112 @@ return (
 
         {/* ADMIN ADD BUTTON */}
         <div className="flex justify-center md:justify-end mb-10">
-            {isAdmin && !showAdd && !editingItem && (
-                <button 
-                  onClick={() => setShowAdd(true)} 
-                  className={`${theme.accentBg} text-white px-6 py-2.5 md:px-8 md:py-3 rounded-full text-xs md:text-sm font-bold shadow-lg hover:-translate-y-1 transition-all flex items-center gap-2`}
-                >
-                  <Plus size={16}/> Add New
-                </button>
-            )}
+          {isAdmin && !showAdd && !editingItem && (
+            <button
+              onClick={() => setShowAdd(true)}
+              className={`${theme.accentBg} text-white px-6 py-2.5 md:px-8 md:py-3 rounded-full text-xs md:text-sm font-bold shadow-lg hover:-translate-y-1 transition-all flex items-center gap-2`}
+            >
+              <Plus size={16} /> Add New
+            </button>
+          )}
         </div>
 
-        {/* FORMS SECTION */}
+        {/* FORMS */}
         {(showAdd || editingItem) && (
-            <div className="mb-12 animate-scale-in">
-                <AddItemForm 
-                  category={id} 
-                  onCancel={() => { setShowAdd(false); setEditingItem(null); }} 
-                  onRefresh={fetchItems} 
-                  showToast={showToast} 
-                  theme={theme} 
-                  initialData={editingItem} 
-                />
-            </div>
+          <div className="mb-12 animate-scale-in">
+            <AddItemForm
+              category={id}
+              onCancel={() => {
+                setShowAdd(false);
+                setEditingItem(null);
+              }}
+              onRefresh={fetchItems}
+              showToast={showToast}
+              theme={theme}
+              initialData={editingItem}
+            />
+          </div>
         )}
 
         {/* ITEM GRID */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-10">
-            {displayedItems.map((item, i) => (
-                <Link to={`/item/${item.id}`} key={item.id} className="block group animate-fade-in-up" style={{animationDelay: `${i * 100}ms`}}>
-                    <div className={`relative h-72 md:h-80 ${theme.cardBg} rounded-2xl overflow-hidden mb-4 border shadow-lg group-hover:shadow-2xl transition-all duration-500 group-hover:-translate-y-2 ${theme.name==='dark'?'border-white/5':'border-gray-100'}`}>
-                        {item.image ? (
-                            <img src={item.image} className="w-full h-full object-cover group-hover:scale-110 transition duration-1000" alt={item.name} />
-                        ) : (
-                            <div className={`flex items-center justify-center h-full opacity-10`}><ImageIcon size={40}/></div>
-                        )}
-                        
-                        {/* Admin Action Buttons */}
-                        {isAdmin && (
-                          <div className="absolute top-3 right-3 flex gap-2 z-20 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button onClick={(e) => { e.preventDefault(); setEditingItem(item); }} className="bg-blue-600 text-white p-2 rounded-full shadow-lg hover:scale-110 transition"><Edit2 size={14}/></button>
-                            <button onClick={(e) => { e.preventDefault(); setDeleteId(item.id); }} className="bg-red-600 text-white p-2 rounded-full shadow-lg hover:scale-110 transition"><Trash2 size={14}/></button>
-                          </div>
-                        )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-60"></div>
-                        
-                        {/* Price & Name Overlay */}
-                        <div className="absolute bottom-5 left-5 right-5 flex justify-between items-end">
-                            <h3 className="text-xl md:text-2xl font-serif text-white leading-tight drop-shadow-md">{item.name}</h3>
-                            <span className="text-sm md:text-base font-light text-white bg-white/10 backdrop-blur-md px-3 py-1 rounded-lg border border-white/20">
-                                {item.price}
-                            </span>
-                        </div>
-                    </div>
-                </Link>
-            ))}
+          {displayedItems.map((item, i) => (
+            <Link
+              to={`/item/${item.id}`}
+              key={item.id}
+              className="block group animate-fade-in-up"
+              style={{ animationDelay: `${i * 100}ms` }}
+            >
+              <div
+                className={`relative h-72 md:h-80 ${theme.cardBg} rounded-2xl overflow-hidden mb-4 border shadow-lg group-hover:shadow-2xl transition-all duration-500 group-hover:-translate-y-2 ${
+                  theme.name === "dark" ? "border-white/5" : "border-gray-100"
+                }`}
+              >
+                {item.image ? (
+                  <img
+                    src={item.image}
+                    className="w-full h-full object-cover group-hover:scale-110 transition duration-1000"
+                    alt={item.name}
+                  />
+                ) : (
+                  <div className="flex items-center justify-center h-full opacity-10">
+                    <ImageIcon size={40} />
+                  </div>
+                )}
+
+                {/* ADMIN BUTTONS */}
+                {isAdmin && (
+                  <div className="absolute top-3 right-3 flex gap-2 z-30 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setEditingItem(item);
+                      }}
+                      className="bg-blue-600 text-white p-2 rounded-full shadow-lg hover:scale-110 transition"
+                    >
+                      <Edit2 size={14} />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setDeleteId(item.id);
+                      }}
+                      className="bg-red-600 text-white p-2 rounded-full shadow-lg hover:scale-110 transition"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                )}
+
+                {/* GRADIENT */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-60 pointer-events-none"></div>
+
+                <div className="absolute bottom-5 left-5 right-5 flex justify-between items-end">
+                  <h3 className="text-xl md:text-2xl font-serif text-white leading-tight drop-shadow-md">
+                    {item.name}
+                  </h3>
+                  <span className="text-sm md:text-base font-light text-white bg-white/10 backdrop-blur-md px-3 py-1 rounded-lg border border-white/20">
+                    {item.price}
+                  </span>
+                </div>
+              </div>
+            </Link>
+          ))}
         </div>
+      </div>
+
+      <ConfirmModal
+        isOpen={!!deleteId}
+        onClose={() => setDeleteId(null)}
+        onConfirm={handleDelete}
+        title="Delete Item"
+        message="Are you sure?"
+        theme={theme}
+      />
+      <Footer theme={theme} />
     </div>
-    
-    <ConfirmModal isOpen={!!deleteId} onClose={() => setDeleteId(null)} onConfirm={handleDelete} title="Delete Item" message="Are you sure?" theme={theme} />
-    <Footer theme={theme} />
-  </div>
-);
+  );
+};
 
 const ItemDetailsPage = ({ theme, openSearch }) => {
   const { itemId } = useParams();
