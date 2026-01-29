@@ -22,13 +22,10 @@ export default function App() {
   const [toast, setToast] = useState(null);
 
   const theme = isDark ? THEMES.dark : THEMES.light;
-  const triggerToast = (msg, type) => { 
-    setToast({ message: msg, type }); 
-    setTimeout(() => setToast(null), 3000); 
-  };
+  const triggerToast = (msg, type) => { setToast({ message: msg, type }); setTimeout(() => setToast(null), 3000); };
   const openSearchWithTerm = (term) => { setSearchExpanded(true); };
 
-  // Sync Tailwind dark mode class with state
+  // --- CRITICAL FIX: Keep this for proper dark mode switching ---
   useEffect(() => {
     if (isDark) {
       document.documentElement.classList.add('dark');
@@ -41,11 +38,11 @@ export default function App() {
     <Router>
       <GlobalStyles theme={theme} />
       
-      {/* THE COLOR BLOCK WRAPPER */}
-      <div className={`min-h-screen w-full transition-colors duration-500 ${theme.bgApp} ${theme.textMain}`}>
+      {/* overflow-x-hidden prevents the "horizontal wobble" on mobile */}
+      <div className={`min-h-screen w-full transition-colors duration-500 ${theme.bgApp} ${theme.textMain} overflow-x-hidden`}>
           
-          {/* TOP NAV LOGIC */}
           <Routes>
+              {/* Hide Navbar on specific item detail pages if you want that full-screen look */}
               <Route path="/item/:itemId" element={null} /> 
               <Route path="*" element={ 
                 <Navbar 
@@ -67,13 +64,13 @@ export default function App() {
             onClick={() => setSidebarOpen(false)} 
           />
           
-          {/* SIDEBAR DRAWER - Fixed Bracket & Syntax here */}
+          {/* SIDEBAR DRAWER - Optimized for Mobile width */}
           <div className={`fixed inset-y-0 left-0 w-[85vw] md:w-80 ${theme.bgApp} border-r shadow-2xl ${theme.name==='dark'?'border-[#233554]':'border-gray-200'} transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-500 cubic-bezier(0.16, 1, 0.3, 1) z-[61] p-8 flex flex-col`}>
              <div className="flex justify-between items-center mb-10">
                  <span className="font-serif text-xl tracking-widest opacity-50">MENU</span>
                  <button onClick={() => setSidebarOpen(false)} className={`p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition ${theme.textMain}`}><X /></button>
              </div>
-
+             
              <div className="flex-1 overflow-y-auto space-y-10 hide-scrollbar">
                 {Object.entries(SITE_STRUCTURE).map(([parent, subs], idx) => (
                     <div key={parent} className="animate-fade-in-up" style={{animationDelay: `${idx * 100}ms`}}>
@@ -83,7 +80,7 @@ export default function App() {
                             {parent === "Misc" && <Info size={14}/>}
                             {parent}
                         </h3>
-                        <ul className={`space-y-4 pl-4 border-l-2 ${theme.name==='dark'?'border-[#233554]':'border-gray-100'}`}>
+                        <ul className="space-y-4 pl-4 border-l-2 dark:border-[#233554] border-gray-100">
                             {subs.map(sub => (
                                 <li key={sub}>
                                     <Link 
@@ -102,17 +99,14 @@ export default function App() {
              </div>
           </div>
 
-          {/* MODALS & TOASTS */}
           <LoginModal isOpen={showLogin} onClose={() => setShowLogin(false)} onLogin={setIsAdmin} showToast={triggerToast} theme={theme} />
           <Toast message={toast?.message} type={toast?.type} />
 
-          {/* MAIN PAGE CONTENT */}
           <Routes>
             <Route path="/" element={<HomePage openSearch={() => setSearchExpanded(true)} theme={theme} />} />
             <Route path="/category/:id" element={<CategoryPage isAdmin={isAdmin} showToast={triggerToast} theme={theme} />} />
             <Route path="/item/:itemId" element={<ItemDetailsPage theme={theme} openSearch={openSearchWithTerm} />} />
           </Routes>
-
       </div> 
     </Router>
   );
@@ -658,61 +652,169 @@ const CategoryPage = ({ isAdmin, showToast, theme }) => {
   const [editingItem, setEditingItem] = useState(null);
   const [filter, setFilter] = useState("All");
   const [deleteId, setDeleteId] = useState(null);
+
   const subs = SUBCATEGORIES[id] || [];
   const hasSubs = subs.length > 0;
-  const description = DESCRIPTIONS[filter !== "All" ? `${id}-${filter}` : id] || "Curated selection.";
-  const bgImage = getBackground(id, filter !== "All" ? filter : "");
 
+  // Logic to fetch items
   const fetchItems = async () => {
     const q = query(collection(db, "menu-items"), where("subCategory", "==", id));
     const snapshot = await getDocs(q);
     setItems(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
   };
-  useEffect(() => { fetchItems(); setFilter("All"); }, [id]);
-  const handleDelete = async () => { if(deleteId) { await deleteDoc(doc(db, "menu-items", deleteId)); fetchItems(); showToast("Deleted", "success"); setDeleteId(null); } };
+
+  useEffect(() => { 
+    fetchItems(); 
+    setFilter("All"); 
+  }, [id]);
+
+  const handleDelete = async () => { 
+    if(deleteId) { 
+      await deleteDoc(doc(db, "menu-items", deleteId)); 
+      fetchItems(); 
+      showToast("Item Deleted", "success"); 
+      setDeleteId(null); 
+    } 
+  };
+
+  // Filter logic
   const displayedItems = hasSubs && filter !== "All" ? items.filter(i => i.type === filter) : items;
 
   return (
-    <div className={`min-h-screen ${theme.bgApp} ${theme.textMain}`}>
-        <div className="relative h-[50vh] w-full overflow-hidden flex items-center justify-center text-center">
-             <img src={bgImage} className="absolute inset-0 w-full h-full object-cover transition-all duration-1000 animate-scale-in" style={{animationDuration: '5s'}} />
-             <div className={`absolute inset-0 ${theme.heroOverlay}`}></div>
-             <div className="relative z-10 px-8 animate-fade-in-up">
-                 <div className="flex justify-center mb-4 text-white opacity-80">{getCategoryIcon(id)}</div>
-                 <h1 className="text-7xl font-serif text-white drop-shadow-2xl mb-6">{id.replace('-', ' ')}</h1>
-                 <p className="text-white/90 text-xl font-light max-w-lg mx-auto drop-shadow-md leading-relaxed">{description}</p>
-             </div>
+    <div className={`min-h-screen ${theme.bgApp} pt-24 pb-20 transition-colors duration-500`}>
+      <div className="max-w-7xl mx-auto px-6">
+        
+        {/* HEADER SECTION */}
+        <div className="text-center mb-12 animate-fade-in-up">
+           <div className="flex justify-center mb-4 text-orange-400">{getCategoryIcon(id)}</div>
+           <h1 className={`text-6xl md:text-8xl font-serif mb-4 capitalize ${theme.textMain}`}>{id.replace('-', ' ')}</h1>
+           <p className={`max-w-md mx-auto text-lg ${theme.textMuted} font-light`}>
+             {DESCRIPTIONS[id] || "Curated selections for the ultimate dining experience at Eauzone."}
+           </p>
         </div>
 
-        <div className="max-w-7xl mx-auto px-6 -mt-16 relative z-10 pb-24">
-            <div className="flex flex-col md:flex-row justify-center md:justify-between items-center mb-12 gap-6">
-                 <div className="flex flex-nowrap gap-3 overflow-x-auto hide-scrollbar p-2 -mx-6 px-6">
-                    {hasSubs && ["All", ...subs].map(f => (
-                        <button key={f} onClick={() => setFilter(f)} className={`flex-shrink-0 px-6 py-2 rounded-full text-xs font-bold backdrop-blur-md border transition-all shadow-lg hover:-translate-y-1 ${filter===f ? theme.accentBg + " text-white border-transparent" : "bg-white/10 border-white/20 text-white hover:bg-white/20"}`}>{f}</button>
-                    ))}
-                 </div>
-                 {isAdmin && !showAdd && !editingItem && <button onClick={() => setShowAdd(true)} className={`${theme.accentBg} text-white px-8 py-3 rounded-full font-bold shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all flex items-center gap-2`}><Plus size={18}/> Add New</button>}
+        {/* HORIZONTAL SCROLL FIX (Mobile optimized) */}
+        {hasSubs && (
+          <div className="relative mb-12 animate-fade-in-up stagger-1">
+            <div className="flex flex-nowrap gap-3 overflow-x-auto hide-scrollbar -mx-6 px-6">
+              {["All", ...subs].map(f => (
+                <button
+                  key={f}
+                  onClick={() => setFilter(f)}
+                  className={`flex-shrink-0 px-8 py-3 rounded-full text-sm font-bold border transition-all duration-300 ${
+                    filter === f 
+                    ? `${theme.accentBg} text-white border-transparent shadow-lg scale-105` 
+                    : `backdrop-blur-md ${theme.name==='dark' ? 'border-white/10 text-white/60' : 'border-gray-200 text-gray-500'} hover:border-current`
+                  }`}
+                >
+                  {f}
+                </button>
+              ))}
             </div>
+          </div>
+        )}
 
-            {(showAdd || editingItem) && <AddItemForm category={id} onCancel={() => { setShowAdd(false); setEditingItem(null); }} onRefresh={fetchItems} showToast={showToast} theme={theme} initialData={editingItem} />}
+        {/* ADMIN CONTROLS */}
+        {isAdmin && !showAdd && !editingItem && (
+          <button 
+            onClick={() => setShowAdd(true)} 
+            className={`${theme.accentBg} text-white px-8 py-4 rounded-2xl font-bold flex items-center gap-2 mx-auto mb-12 hover:scale-105 transition shadow-xl`}
+          >
+            <Plus size={20} /> Add New {id}
+          </button>
+        )}
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-            {displayedItems.map((item, i) => (
-                <Link to={`/item/${item.id}`} key={item.id} className="block group animate-fade-in-up" style={{animationDelay: `${i * 100}ms`}}>
-                <div className={`relative h-80 ${theme.cardBg} rounded-2xl overflow-hidden mb-5 border shadow-lg group-hover:shadow-2xl transition-all duration-500 group-hover:-translate-y-2`}>
-                    {item.image ? <img src={item.image} className="w-full h-full object-cover group-hover:scale-110 transition duration-700" /> : <div className={`flex items-center justify-center h-full ${theme.textMuted}`}><ImageIcon size={48} className="opacity-20"/></div>}
-                    {isAdmin && (<div className="absolute top-3 right-3 flex gap-2 z-20"><button onClick={(e) => { e.preventDefault(); setEditingItem(item); }} className="bg-blue-600 text-white p-2 rounded-full shadow-lg hover:scale-110 transition"><Edit2 size={16}/></button><button onClick={(e) => { e.preventDefault(); setDeleteId(item.id); }} className="bg-red-600 text-white p-2 rounded-full shadow-lg hover:scale-110 transition"><Trash2 size={16}/></button></div>)}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+        {/* ADD / EDIT FORM LOGIC */}
+        {(showAdd || editingItem) && (
+          <div className="mb-12">
+            <AddItemForm 
+              category={id} 
+              onCancel={() => { setShowAdd(false); setEditingItem(null); }} 
+              onRefresh={fetchItems} 
+              showToast={showToast} 
+              theme={theme} 
+              initialData={editingItem} 
+            />
+          </div>
+        )}
+
+        {/* THE GRID FIX */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 animate-fade-in-up stagger-2">
+          {displayedItems.map((item, i) => (
+            <div key={item.id} className="group relative">
+              <Link to={`/item/${item.id}`} className="block">
+                <div className={`relative h-[400px] md:h-[500px] ${theme.cardBg} rounded-[2.5rem] overflow-hidden mb-4 shadow-2xl transition-all duration-500 group-hover:-translate-y-2 border ${theme.name==='dark'?'border-white/5':'border-gray-100'}`}>
+                  
+                  {/* Image with Zoom effect */}
+                  {item.image ? (
+                    <img 
+                      src={item.image} 
+                      className="w-full h-full object-cover transition duration-1000 group-hover:scale-110" 
+                      alt={item.name} 
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center opacity-20">
+                      <ImageIcon size={48} />
+                    </div>
+                  )}
+
+                  {/* Gradient Overlay for Text Visibility */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+                  
+                  {/* OVERLAY: PRICE & NAME WRAP */}
+                  <div className="absolute bottom-8 left-8 right-8 flex justify-between items-end">
+                    <div className="flex-1 pr-4">
+                       <h3 className="text-3xl font-serif text-white leading-tight mb-2 drop-shadow-lg">{item.name}</h3>
+                       <div className="flex gap-2">
+                         <span className="text-[10px] uppercase font-bold text-white/60 tracking-widest">{item.type || item.subCategory}</span>
+                       </div>
+                    </div>
+                    
+                    <div className="bg-white/10 backdrop-blur-xl border border-white/20 px-4 py-2 rounded-2xl text-white shadow-2xl">
+                      <span className="text-xl font-light">{item.price}</span>
+                      <span className="text-[10px] font-bold ml-1 text-white/70">AED</span>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex flex-col md:flex-row justify-between items-start gap-2 px-2">
-                    <div><h3 className={`text-2xl font-serif group-hover:${theme.accent} transition duration-300`}>{item.name}</h3><p className={`line-clamp-1 ${theme.textMuted} text-sm mt-1`}>{item.description}</p></div>
-                    <span className="text-xl font-light whitespace-nowrap bg-black/5 dark:bg-white/10 px-3 py-1 rounded-lg">{item.price} <span className="text-xs font-bold">AED</span></span>
+              </Link>
+
+              {/* ADMIN ACTION BUTTONS (Floating inside card) */}
+              {isAdmin && (
+                <div className="absolute top-6 right-6 flex gap-2 z-30 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <button 
+                    onClick={(e) => { e.preventDefault(); setEditingItem(item); }} 
+                    className="bg-blue-600/80 backdrop-blur-md text-white p-3 rounded-full shadow-xl hover:bg-blue-600 transition hover:scale-110"
+                  >
+                    <Edit2 size={18}/>
+                  </button>
+                  <button 
+                    onClick={(e) => { e.preventDefault(); setDeleteId(item.id); }} 
+                    className="bg-red-600/80 backdrop-blur-md text-white p-3 rounded-full shadow-xl hover:bg-red-600 transition hover:scale-110"
+                  >
+                    <Trash2 size={18}/>
+                  </button>
                 </div>
-                </Link>
-            ))}
+              )}
             </div>
+          ))}
+        </div>
+
+        {/* Empty State */}
+        {displayedItems.length === 0 && (
+          <div className="text-center py-20 opacity-30">
+            <p className="text-xl italic">No items found in this section.</p>
+          </div>
+        )}
       </div>
-      <ConfirmModal isOpen={!!deleteId} onClose={() => setDeleteId(null)} onConfirm={handleDelete} title="Delete Item" message="Are you sure?" theme={theme} />
+
+      <ConfirmModal 
+        isOpen={!!deleteId} 
+        onClose={() => setDeleteId(null)} 
+        onConfirm={handleDelete} 
+        title="Delete Item" 
+        message="This action cannot be undone. Are you sure?" 
+        theme={theme} 
+      />
       <Footer theme={theme} />
     </div>
   );
