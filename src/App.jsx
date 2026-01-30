@@ -6,8 +6,7 @@ import {
   Milk, Wheat, Fish, Wine, Flame, Leaf, Sparkles, 
   UtensilsCrossed, Coffee, Beer, Martini, GlassWater, Baby, Cookie, 
   FileText, Map, CircleHelp, ShieldCheck, Citrus, Droplets, Soup,
-  Recycle,
-  Sprout
+  Recycle, Sprout, Filter, Grape
 } from 'lucide-react';
 import { db, CLOUD_NAME, UPLOAD_PRESET } from './firebase';
 import { collection, addDoc, getDocs, deleteDoc, updateDoc, doc, getDoc, query, where, limit } from 'firebase/firestore';
@@ -25,52 +24,29 @@ export default function App() {
   const triggerToast = (msg, type) => { setToast({ message: msg, type }); setTimeout(() => setToast(null), 3000); };
   const openSearchWithTerm = (term) => { setSearchExpanded(true); };
 
-  // --- CRITICAL FIX: Keep this for proper dark mode switching ---
   useEffect(() => {
-    if (isDark) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
+    if (isDark) { document.documentElement.classList.add('dark'); } 
+    else { document.documentElement.classList.remove('dark'); }
   }, [isDark]);
 
   return (
     <Router>
       <GlobalStyles theme={theme} />
       
-      {/* overflow-x-hidden prevents the "horizontal wobble" on mobile */}
       <div className={`min-h-screen w-full transition-colors duration-500 ${theme.bgApp} ${theme.textMain} overflow-x-hidden`}>
           
           <Routes>
-              {/* Hide Navbar on specific item detail pages if you want that full-screen look */}
               <Route path="/item/:itemId" element={null} /> 
-              <Route path="*" element={ 
-                <Navbar 
-                  toggleSidebar={() => setSidebarOpen(true)} 
-                  toggleLogin={() => isAdmin ? setIsAdmin(false) : setShowLogin(true)} 
-                  isSearchOpen={searchExpanded} 
-                  openSearch={() => setSearchExpanded(true)} 
-                  closeSearch={() => setSearchExpanded(false)} 
-                  toggleTheme={() => setIsDark(!isDark)} 
-                  isAdmin={isAdmin} 
-                  theme={theme} 
-                /> 
-              } />
+              <Route path="*" element={ <Navbar toggleSidebar={() => setSidebarOpen(true)} toggleLogin={() => isAdmin ? setIsAdmin(false) : setShowLogin(true)} isSearchOpen={searchExpanded} openSearch={() => setSearchExpanded(true)} closeSearch={() => setSearchExpanded(false)} toggleTheme={() => setIsDark(!isDark)} isAdmin={isAdmin} theme={theme} /> } />
           </Routes>
 
-          {/* SIDEBAR OVERLAY */}
-          <div 
-            className={`fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] transition-opacity duration-500 ${sidebarOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`} 
-            onClick={() => setSidebarOpen(false)} 
-          />
+          <div className={`fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] transition-opacity duration-500 ${sidebarOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`} onClick={() => setSidebarOpen(false)} />
           
-          {/* SIDEBAR DRAWER - Optimized for Mobile width */}
           <div className={`fixed inset-y-0 left-0 w-[85vw] md:w-80 ${theme.bgApp} border-r shadow-2xl ${theme.name==='dark'?'border-[#233554]':'border-gray-200'} transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-500 cubic-bezier(0.16, 1, 0.3, 1) z-[61] p-8 flex flex-col`}>
              <div className="flex justify-between items-center mb-10">
                  <span className="font-serif text-xl tracking-widest opacity-50">MENU</span>
                  <button onClick={() => setSidebarOpen(false)} className={`p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition ${theme.textMain}`}><X /></button>
              </div>
-             
              <div className="flex-1 overflow-y-auto space-y-10 hide-scrollbar">
                 {Object.entries(SITE_STRUCTURE).map(([parent, subs], idx) => (
                     <div key={parent} className="animate-fade-in-up" style={{animationDelay: `${idx * 100}ms`}}>
@@ -83,11 +59,7 @@ export default function App() {
                         <ul className="space-y-4 pl-4 border-l-2 dark:border-[#233554] border-gray-100">
                             {subs.map(sub => (
                                 <li key={sub}>
-                                    <Link 
-                                      to={`/category/${sub}`} 
-                                      onClick={() => setSidebarOpen(false)} 
-                                      className={`text-lg ${theme.textMain} opacity-70 hover:opacity-100 hover:translate-x-2 transition-all duration-300 flex items-center gap-3 group`}
-                                    >
+                                    <Link to={`/category/${sub}`} onClick={() => setSidebarOpen(false)} className={`text-lg ${theme.textMain} opacity-70 hover:opacity-100 hover:translate-x-2 transition-all duration-300 flex items-center gap-3 group`}>
                                         <span className="opacity-0 group-hover:opacity-100 transition-opacity text-xs -ml-4">{theme.name==='dark'?'Now':'->'}</span>
                                         {sub.replace('-', ' ')}
                                     </Link>
@@ -150,25 +122,15 @@ const THEMES = {
 const GlobalStyles = ({ theme }) => (
   <style>{`
     html, body, #root { margin: 0; padding: 0; width: 100%; height: 100%; }
-    
-    /* REMOVED THE BODY COLOR LOGIC FROM HERE */
-    /* We now handle colors in the App wrapper to prevent black bars */
-    
-    body { 
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    }
-
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
     .hide-scrollbar::-webkit-scrollbar { display: none; }
     .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-    
     @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     @keyframes scaleIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
     @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-    
     .animate-fade-in-up { animation: fadeInUp 0.6s ease-out forwards; }
     .animate-scale-in { animation: scaleIn 0.3s ease-out forwards; }
     .animate-slide-in { animation: slideInRight 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-    
     .stagger-1 { animation-delay: 50ms; }
     .stagger-2 { animation-delay: 100ms; }
     .stagger-3 { animation-delay: 150ms; }
@@ -192,11 +154,12 @@ const SUBCATEGORIES = {
     "Cocktails": ["Signature", "Classics"],
     "Mocktails": ["Signature", "Classics"],
     "Beers": ["Draught", "Bottles"],
-    "Coffee-Tea": ["Coffee", "Tea"],
+    "Coffee-Tea": ["Coffee", "Tea", "Shakes & Smoothies"],
     "Soft-Drinks": ["Water", "Sodas", "Juices"]
 };
 
 const COMMON_ALLERGENS = ["Dairy", "Gluten", "Tree Nuts", "Peanut", "Seafood", "Soybeans", "Egg", "Fish", "Sesame", "Mustard", "Celery", "Sulphites", "Lupine", "Molluscs", "Alcohol", "Pork", "Spicy", "Raw", "Vegan", "Vegetarian", "Sustainable"];
+const WINE_BODIES = ["Light Bodied", "Medium Bodied", "Full Bodied"];
 
 const DESCRIPTIONS = {
   // Food
@@ -212,8 +175,14 @@ const DESCRIPTIONS = {
   "Kids": "Gourmet favorites tailored for our younger guests.",
   "Desserts": "The sweet finale. Indulgent textures and delicate sweetness.",
   // Beverage
-  "Coffee-Tea": "Artisan roasted beans and rare tea blends.",
-  "Soft-Drinks": "Refreshing mineral waters and premium sodas.",
+  "Coffee-Tea": "Artisan roasted beans, rare tea blends, and creamy delights.",
+  "Coffee-Tea-Coffee": "Barista-crafted espresso, latte, and cold brew selections.",
+  "Coffee-Tea-Tea": "Premium loose-leaf teas and herbal infusions.",
+  "Coffee-Tea-Shakes & Smoothies": "Rich, creamy shakes and revitalizing fruit blends.",
+  "Soft-Drinks": "Refreshing mineral waters, premium sodas, and fresh juices.",
+  "Soft-Drinks-Water": "Still and sparkling waters from pristine sources.",
+  "Soft-Drinks-Sodas": "Classic fizzy favorites and premium mixers.",
+  "Soft-Drinks-Juices": "Freshly squeezed seasonal fruits.",
   "Mocktails": "Alcohol-free artistry using fresh fruits and botanicals.",
   "Mocktails-Signature": "Complex, alcohol-free creations unique to Eauzone.",
   "Mocktails-Classics": "Timeless refreshments, perfectly balanced.",
@@ -282,6 +251,7 @@ const getBackground = (category, subType) => {
       "Mocktails": "https://images.unsplash.com/photo-1534353473418-4cfa6c56fd38?auto=format&fit=crop&q=80",
       "Beers": "https://images.unsplash.com/photo-1535958636474-b021ee8876a3?auto=format&fit=crop&q=80",
       "Coffee-Tea": "https://images.unsplash.com/photo-1447933601403-0c6688de566e?auto=format&fit=crop&q=80",
+      "Coffee-Tea-Shakes & Smoothies": "https://images.unsplash.com/photo-1577805947697-b9b2d5d39c96?auto=format&fit=crop&q=80",
       "Soft-Drinks": "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&q=80",
       "Misc": "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&q=80",
       "HACCP": "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&q=80",
@@ -301,7 +271,7 @@ const getCategoryIcon = (name) => {
     if (n.includes('dessert')) return <Cookie size={18} />;
     // Drinks
     if (n.includes('coffee') || n.includes('tea')) return <Coffee size={18} />;
-    if (n.includes('soft') || n.includes('water')) return <GlassWater size={18} />;
+    if (n.includes('soft') || n.includes('water') || n.includes('shake')) return <GlassWater size={18} />;
     if (n.includes('mocktail')) return <Citrus size={18} />;
     if (n.includes('cocktail')) return <Martini size={18} />;
     if (n.includes('spirit') || n.includes('vodka') || n.includes('gin')) return <Droplets size={18} />;
@@ -389,8 +359,11 @@ const Footer = ({ theme }) => (
       <div className="flex justify-center mb-6">
         <Sparkles size={24} className={`${theme.accent} opacity-50`} />
       </div>
-      <p className="font-serif text-lg opacity-80 tracking-widest">EAUZONE 2026</p>
-      <div className="flex flex-wrap justify-center gap-x-8 gap-y-3 opacity-70 pt-4">
+      <div className="flex flex-col items-center gap-2">
+        <p className="font-serif text-lg tracking-widest uppercase">EAUZONE 2026</p>
+        <p className="text-[10px] tracking-widest uppercase opacity-70">Part of One&Only Royal Mirage Dubai</p>
+      </div>
+      <div className="flex flex-wrap justify-center gap-x-8 gap-y-3 opacity-70 pt-4 border-t border-dashed border-gray-500/20 w-full">
         <span className="hover:opacity-100 transition">Concept: <b className={theme.textMain}>Kritika Pradhan</b></span>
         <span className="hover:opacity-100 transition">Food: <b className={theme.textMain}>Rimen Sim</b></span>
         <span className="hover:opacity-100 transition">Beverage: <b className={theme.textMain}>Robin Varghese</b></span>
@@ -427,15 +400,50 @@ const LoginModal = ({ isOpen, onClose, onLogin, showToast, theme }) => {
 
 const AddItemForm = ({ category, onCancel, onRefresh, showToast, theme, initialData }) => {
     const isEdit = !!initialData;
-    const [data, setData] = useState(initialData || { name:"", price:"", description:"", subCategory: category, image: null, type: "General", ingredients: "", method: "", allergens: "", trivia: "" });
+    // 'types' is now an array to support multiple sub-categories
+    const [data, setData] = useState(initialData || { 
+        name:"", price:"", priceGlass: "", priceBottle: "", description:"", 
+        subCategory: category, image: null, types: [], 
+        ingredients: "", method: "", allergens: "", trivia: "", body: "" 
+    });
+    
+    // Fallback for legacy single-string type
+    useEffect(() => {
+        if(initialData && initialData.type && !Array.isArray(initialData.types)) {
+            setData(d => ({...d, types: [initialData.type]}));
+        }
+    }, [initialData]);
+
     const [loading, setLoading] = useState(false);
     const subs = SUBCATEGORIES[category] || [];
+    const isWine = category === "Wines";
+    const isHousepouring = data.types.includes("Housepouring");
+
+    const toggleType = (t) => {
+        if (data.types.includes(t)) {
+            setData({...data, types: data.types.filter(x => x !== t)});
+        } else {
+            setData({...data, types: [...data.types, t]});
+        }
+    };
     
     const handleSubmit = async (e) => {
         e.preventDefault(); setLoading(true);
         let url = data.image; 
         if (data.image instanceof File) { url = await uploadImage(data.image); }
-        const payload = { ...data, image: url || "", price: Number(data.price), updatedAt: new Date() };
+        // Flatten price structure if needed, or keep logic simple
+        const finalPrice = isHousepouring ? 0 : Number(data.price); // Placeholder for main price if split
+        
+        const payload = { 
+            ...data, 
+            image: url || "", 
+            price: finalPrice,
+            priceGlass: isHousepouring ? Number(data.priceGlass) : 0,
+            priceBottle: isHousepouring ? Number(data.priceBottle) : 0,
+            type: data.types[0] || "General", // Legacy fallback
+            updatedAt: new Date() 
+        };
+        
         if (isEdit) { await updateDoc(doc(db, "menu-items", initialData.id), payload); showToast("Item Updated", "success"); } 
         else { await addDoc(collection(db, "menu-items"), { ...payload, createdAt: new Date() }); showToast("Item Added", "success"); }
         setLoading(false); onRefresh(); onCancel();
@@ -453,47 +461,57 @@ const AddItemForm = ({ category, onCancel, onRefresh, showToast, theme, initialD
             <form onSubmit={handleSubmit} className="space-y-5">
                 {subs.length > 0 && (
                    <div className="flex flex-wrap gap-2 mb-4 p-4 rounded-xl bg-gray-50 dark:bg-black/20">
-                     <span className={`w-full text-xs font-bold uppercase tracking-widest mb-2 ${theme.textMuted}`}>Sub-Category</span>
+                     <span className={`w-full text-xs font-bold uppercase tracking-widest mb-2 ${theme.textMuted}`}>Sub-Categories (Multi-Select)</span>
                      {subs.map(type => (
-                       <button key={type} type="button" onClick={() => setData({...data, type})} className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${data.type === type ? theme.accentBg + " text-white shadow-md transform scale-105" : theme.inputBg + " hover:opacity-80"}`}>{type}</button>
+                       <button key={type} type="button" onClick={() => toggleType(type)} className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${data.types.includes(type) ? theme.accentBg + " text-white shadow-md transform scale-105" : theme.inputBg + " hover:opacity-80"}`}>{type}</button>
                      ))}
                    </div>
                 )}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-10">
+                
+                {/* WINE BODY SELECTION */}
+                {isWine && (
+                    <div className="space-y-1 mb-4">
+                        <label className={`text-xs font-bold uppercase ${theme.textMuted}`}>Wine Body</label>
+                        <select value={data.body} onChange={e => setData({...data, body: e.target.value})} className={`w-full p-3 rounded-xl ${theme.inputBg} outline-none`}>
+                            <option value="">Select Body...</option>
+                            {WINE_BODIES.map(b => <option key={b} value={b}>{b}</option>)}
+                        </select>
+                    </div>
+                )}
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-1"><label className={`text-xs font-bold uppercase ${theme.textMuted}`}>Name</label><input value={data.name} className={`w-full p-3 rounded-xl ${theme.inputBg} outline-none transition-all focus:ring-2 ring-opacity-50`} onChange={e=>setData({...data, name: e.target.value})} required/></div>
-                    <div className="space-y-1"><label className={`text-xs font-bold uppercase ${theme.textMuted}`}>Price (AED)</label><input type="number" value={data.price} className={`w-full p-3 rounded-xl ${theme.inputBg} outline-none transition-all focus:ring-2 ring-opacity-50`} onChange={e=>setData({...data, price: e.target.value})} required/></div>
+                    
+                    {/* CONDITIONAL PRICING FOR HOUSEPOURING WINES */}
+                    {isWine && isHousepouring ? (
+                        <div className="grid grid-cols-2 gap-2">
+                             <div className="space-y-1"><label className={`text-xs font-bold uppercase ${theme.textMuted}`}>Glass (150ml)</label><input type="number" value={data.priceGlass} className={`w-full p-3 rounded-xl ${theme.inputBg} outline-none`} onChange={e=>setData({...data, priceGlass: e.target.value})} required/></div>
+                             <div className="space-y-1"><label className={`text-xs font-bold uppercase ${theme.textMuted}`}>Bottle</label><input type="number" value={data.priceBottle} className={`w-full p-3 rounded-xl ${theme.inputBg} outline-none`} onChange={e=>setData({...data, priceBottle: e.target.value})} required/></div>
+                        </div>
+                    ) : (
+                        <div className="space-y-1"><label className={`text-xs font-bold uppercase ${theme.textMuted}`}>Price (AED)</label><input type="number" value={data.price} className={`w-full p-3 rounded-xl ${theme.inputBg} outline-none transition-all focus:ring-2 ring-opacity-50`} onChange={e=>setData({...data, price: e.target.value})} required/></div>
+                    )}
                 </div>
+
                 <div className="space-y-1"><label className={`text-xs font-bold uppercase ${theme.textMuted}`}>Description</label><textarea value={data.description} className={`w-full p-3 rounded-xl ${theme.inputBg} outline-none h-24 resize-none transition-all focus:ring-2 ring-opacity-50`} onChange={e=>setData({...data, description: e.target.value})}/></div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-10">
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-1"><label className={`text-xs font-bold uppercase ${theme.textMuted}`}>Ingredients</label><textarea value={data.ingredients} className={`w-full p-3 rounded-xl ${theme.inputBg} outline-none h-24 resize-none`} onChange={e=>setData({...data, ingredients: e.target.value})}/></div>
                     <div className="space-y-1"><label className={`text-xs font-bold uppercase ${theme.textMuted}`}>Method/Notes</label><textarea value={data.method} className={`w-full p-3 rounded-xl ${theme.inputBg} outline-none h-24 resize-none`} onChange={e=>setData({...data, method: e.target.value})}/></div>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-10">
-    {/* LEFT: Allergens with Suggestions */}
-    <div className="space-y-1">
-        <label className={`text-xs font-bold uppercase ${theme.textMuted}`}>Allergens</label>
-        <input 
-            list="allergen-suggestions" 
-            value={data.allergens} 
-            className={`w-full p-3 rounded-xl ${theme.inputBg} outline-none`} 
-            onChange={e => setData({...data, allergens: e.target.value})}
-            placeholder="e.g. Dairy, Nuts..."
-        />
-        <datalist id="allergen-suggestions">
-            {COMMON_ALLERGENS.map(alg => <option key={alg} value={alg} />)}
-        </datalist>
-    </div>
-
-    {/* RIGHT: Trivia (Kept Safe) */}
-    <div className="space-y-1">
-        <label className={`text-xs font-bold uppercase ${theme.textMuted}`}>Trivia</label>
-        <input 
-            value={data.trivia} 
-            className={`w-full p-3 rounded-xl ${theme.inputBg} outline-none`} 
-            onChange={e => setData({...data, trivia: e.target.value})}
-        />
-    </div>
-</div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-1">
+                        <label className={`text-xs font-bold uppercase ${theme.textMuted}`}>Allergens</label>
+                        <input list="allergen-suggestions" value={data.allergens} className={`w-full p-3 rounded-xl ${theme.inputBg} outline-none`} onChange={e => setData({...data, allergens: e.target.value})} placeholder="e.g. Dairy, Nuts..."/>
+                        <datalist id="allergen-suggestions">{COMMON_ALLERGENS.map(alg => <option key={alg} value={alg} />)}</datalist>
+                    </div>
+                    <div className="space-y-1">
+                        <label className={`text-xs font-bold uppercase ${theme.textMuted}`}>Trivia</label>
+                        <input value={data.trivia} className={`w-full p-3 rounded-xl ${theme.inputBg} outline-none`} onChange={e => setData({...data, trivia: e.target.value})}/>
+                    </div>
+                </div>
+                
                 <div className={`p-6 border-2 border-dashed rounded-xl transition-colors hover:border-opacity-100 ${theme.name==='dark'?'border-white/10 hover:border-white/30':'border-gray-300 hover:border-gray-400'}`}>
                     <div className="flex items-center gap-4">
                         <div className={`p-3 rounded-full ${theme.inputBg}`}><ImageIcon size={24} className={theme.textMuted}/></div>
@@ -517,28 +535,56 @@ const AddItemForm = ({ category, onCancel, onRefresh, showToast, theme, initialD
 
 const Navbar = ({ toggleSidebar, toggleLogin, isAdmin, toggleTheme, theme, openSearch, isSearchOpen, closeSearch }) => {
     const [term, setTerm] = useState("");
+    const [filterType, setFilterType] = useState("Name"); // Name, Category, Allergen
     const [results, setResults] = useState([]);
-    const handleSearchInput = async (e) => {
-        const val = e.target.value; setTerm(val); if(!val) { setResults([]); return; }
+
+    const handleSearchInput = async (val, type) => {
+        setTerm(val); 
+        if(!val) { setResults([]); return; }
+        
         const snapshot = await getDocs(collection(db, "menu-items"));
         const allItems = snapshot.docs.map(doc => ({id: doc.id, ...doc.data()}));
         const lower = val.toLowerCase();
-        setResults(allItems.filter(i => i.name.toLowerCase().includes(lower) || i.description?.toLowerCase().includes(lower)).slice(0, 5));
+        
+        const filtered = allItems.filter(i => {
+            if (type === "Allergen") return i.allergens?.toLowerCase().includes(lower);
+            if (type === "Category") return i.subCategory?.toLowerCase().includes(lower) || (i.types && i.types.some(t => t.toLowerCase().includes(lower)));
+            // Default Name/Desc search
+            return i.name.toLowerCase().includes(lower) || i.description?.toLowerCase().includes(lower);
+        });
+        setResults(filtered.slice(0, 5));
     };
 
     return (
         <nav className={`fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 h-24 transition-all duration-300 ${theme.navOverlay} shadow-sm`}>
             {isSearchOpen ? (
-                <div className="w-full max-w-4xl mx-auto flex items-center gap-6 animate-fade-in-up">
-                     <Search className={theme.textMuted} size={24} />
-                     <input autoFocus placeholder="Search the Bible..." className={`flex-1 bg-transparent border-none outline-none text-2xl font-light ${theme.textMain} placeholder:${theme.textMuted}`} value={term} onChange={handleSearchInput} />
-                     <button onClick={closeSearch} className={`p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition ${theme.textMain}`}><X size={28}/></button>
+                <div className="w-full max-w-4xl mx-auto flex flex-col md:flex-row items-center gap-4 animate-fade-in-up">
+                     <div className="flex items-center gap-2 w-full md:w-auto">
+                        <Filter className={theme.textMuted} size={20}/>
+                        <select 
+                            value={filterType} 
+                            onChange={(e) => { setFilterType(e.target.value); handleSearchInput(term, e.target.value); }}
+                            className={`bg-transparent border-none outline-none font-bold text-sm ${theme.textMuted} uppercase tracking-wider cursor-pointer`}
+                        >
+                            <option value="Name">Name</option>
+                            <option value="Category">Category</option>
+                            <option value="Allergen">Allergen</option>
+                        </select>
+                     </div>
+                     <div className="flex-1 w-full relative flex items-center gap-4">
+                        <input autoFocus placeholder={`Search by ${filterType}...`} className={`flex-1 bg-transparent border-none outline-none text-xl md:text-2xl font-light ${theme.textMain} placeholder:${theme.textMuted}`} value={term} onChange={(e) => handleSearchInput(e.target.value, filterType)} />
+                        <button onClick={closeSearch} className={`p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition ${theme.textMain}`}><X size={28}/></button>
+                     </div>
+                     
                      {results.length > 0 && (
-                        <div className={`absolute top-24 left-6 right-6 ${theme.cardBg} rounded-2xl overflow-hidden p-2 shadow-2xl border border-gray-100 dark:border-gray-800`}>
+                        <div className={`absolute top-28 left-6 right-6 ${theme.cardBg} rounded-2xl overflow-hidden p-2 shadow-2xl border border-gray-100 dark:border-gray-800 max-h-[60vh] overflow-y-auto`}>
                             {results.map((r, i) => (
                                 <Link to={`/item/${r.id}`} key={r.id} onClick={closeSearch} className={`flex items-center gap-4 p-4 rounded-xl hover:bg-black/5 dark:hover:bg-white/5 transition-colors animate-fade-in-up`} style={{animationDelay: `${i * 50}ms`}}>
                                      {r.image ? <img src={r.image} className="h-12 w-12 rounded-lg object-cover shadow-sm"/> : <div className={`h-12 w-12 rounded-lg flex items-center justify-center ${theme.inputBg}`}><UtensilsCrossed size={20} className="opacity-50"/></div>}
-                                     <div><p className={`font-bold ${theme.textMain}`}>{r.name}</p><p className={`text-xs ${theme.textMuted} flex items-center gap-1`}>{getCategoryIcon(r.subCategory)} {r.subCategory}</p></div>
+                                     <div>
+                                         <p className={`font-bold ${theme.textMain}`}>{r.name}</p>
+                                         <p className={`text-xs ${theme.textMuted} flex items-center gap-1`}>{getCategoryIcon(r.subCategory)} {r.subCategory}</p>
+                                     </div>
                                 </Link>
                             ))}
                         </div>
@@ -626,11 +672,8 @@ const HomePage = ({ openSearch, theme }) => {
         </div>
         <div className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center z-10">
         <span className={`${theme.accent} tracking-[0.5em] text-xs font-bold uppercase mb-6 animate-fade-in-up stagger-1`}>The Official</span>
-{/* Removed 'text-white' below so it inherits theme.textMain */}
-{/* Switched 'text-white' to '${theme.textMain}' */}
-<h1 className={`font-serif text-6xl md:text-9xl mb-6 tracking-tighter ${theme.textMain} drop-shadow-2xl animate-fade-in-up stagger-2`}>Bible</h1>
-{/* Removed 'text-white/90' below */}
-<p className="max-w-xs md:max-w-md text-base md:text-xl font-light leading-relaxed opacity-90 mb-12 drop-shadow-md animate-fade-in-up stagger-3">Floating between the sky and sea, Eauzone offers modern Asian cuisine with an elegant twist.</p>
+        <h1 className={`font-serif text-6xl md:text-9xl mb-6 tracking-tighter ${theme.textMain} drop-shadow-2xl animate-fade-in-up stagger-2`}>Bible</h1>
+        <p className="max-w-xs md:max-w-md text-base md:text-xl font-light leading-relaxed opacity-90 mb-12 drop-shadow-md animate-fade-in-up stagger-3">Floating between the sky and sea, Eauzone offers modern Asian cuisine with an elegant twist.</p>
            <button onClick={openSearch} className={`group flex items-center gap-4 backdrop-blur-md border px-10 py-5 rounded-full hover:bg-white/20 transition-all shadow-2xl animate-fade-in-up stagger-4 ${theme.name==='light' ? 'bg-white/80 border-white text-gray-900' : 'bg-white/10 border-white/30 text-white'}`}>
              <Search size={22} className={theme.name==='light'?'text-gray-900':theme.accent} />
              <span className="font-light tracking-widest text-sm">SEARCH MENU</span>
@@ -655,7 +698,8 @@ const CategoryPage = ({ isAdmin, showToast, theme }) => {
 
   const subs = SUBCATEGORIES[id] || [];
   const hasSubs = subs.length > 0;
-  const description = DESCRIPTIONS[filter !== "All" ? `${id}-${filter}` : id] || "Curated selection.";
+  // Dynamic description based on filter
+  const description = DESCRIPTIONS[`${id}-${filter}`] || DESCRIPTIONS[id] || "Curated selection.";
   const bgImage = getBackground(id, filter !== "All" ? filter : "");
 
   const fetchItems = async () => {
@@ -678,37 +722,24 @@ const CategoryPage = ({ isAdmin, showToast, theme }) => {
     }
   };
 
-  const displayedItems =
-    hasSubs && filter !== "All" ? items.filter((i) => i.type === filter) : items;
+  // Filter logic supports arrays of types now
+  const displayedItems = hasSubs && filter !== "All" 
+    ? items.filter((i) => (i.types && i.types.includes(filter)) || i.type === filter) 
+    : items;
 
   return (
     <div className={`min-h-screen ${theme.bgApp} ${theme.textMain} transition-colors duration-500`}>
-      {/* --- HERO SECTION --- */}
       <div className="relative h-[40vh] md:h-[50vh] w-full overflow-hidden flex items-center justify-center text-center">
-        <img
-          src={bgImage}
-          className="absolute inset-0 w-full h-full object-cover transition-all duration-1000 animate-scale-in"
-          style={{ animationDuration: "5s" }}
-          alt="Category Background"
-        />
+        <img src={bgImage} className="absolute inset-0 w-full h-full object-cover transition-all duration-1000 animate-scale-in" style={{ animationDuration: "5s" }} alt="Category Background" />
         <div className={`absolute inset-0 ${theme.heroOverlay} bg-black/40`}></div>
-
         <div className="relative z-10 px-6 animate-fade-in-up">
-          <div className="flex justify-center mb-4 text-white/80 scale-75 md:scale-100">
-            {getCategoryIcon(id)}
-          </div>
-          <h1 className="text-4xl md:text-7xl font-serif text-white drop-shadow-2xl mb-4 capitalize">
-            {id.replace("-", " ")}
-          </h1>
-          <p className="text-white/90 text-sm md:text-xl font-light max-w-lg mx-auto drop-shadow-md leading-relaxed px-4">
-            {description}
-          </p>
+          <div className="flex justify-center mb-4 text-white/80 scale-75 md:scale-100">{getCategoryIcon(id)}</div>
+          <h1 className="text-4xl md:text-7xl font-serif text-white drop-shadow-2xl mb-4 capitalize">{id.replace("-", " ")}</h1>
+          <p className="text-white/90 text-sm md:text-xl font-light max-w-lg mx-auto drop-shadow-md leading-relaxed px-4">{description}</p>
         </div>
       </div>
 
-      {/* CONTENT SECTION */}
       <div className="max-w-7xl mx-auto px-6 -mt-12 relative z-20 pb-24">
-        {/* HORIZONTAL SCROLL — EXACT */}
         {hasSubs && (
           <div className="relative mb-12 animate-fade-in-up stagger-1">
             <div className="flex flex-nowrap gap-2 md:gap-3 overflow-x-auto hide-scrollbar p-2 -mx-6 px-6 w-full">
@@ -729,94 +760,43 @@ const CategoryPage = ({ isAdmin, showToast, theme }) => {
           </div>
         )}
 
-        {/* ADMIN ADD BUTTON */}
         <div className="flex justify-center md:justify-end mb-10">
           {isAdmin && !showAdd && !editingItem && (
-            <button
-              onClick={() => setShowAdd(true)}
-              className={`${theme.accentBg} text-white px-6 py-2.5 md:px-8 md:py-3 rounded-full text-xs md:text-sm font-bold shadow-lg hover:-translate-y-1 transition-all flex items-center gap-2`}
-            >
-              <Plus size={16} /> Add New
-            </button>
+            <button onClick={() => setShowAdd(true)} className={`${theme.accentBg} text-white px-6 py-2.5 md:px-8 md:py-3 rounded-full text-xs md:text-sm font-bold shadow-lg hover:-translate-y-1 transition-all flex items-center gap-2`}><Plus size={16} /> Add New</button>
           )}
         </div>
 
-        {/* FORMS */}
         {(showAdd || editingItem) && (
           <div className="mb-12 animate-scale-in">
-            <AddItemForm
-              category={id}
-              onCancel={() => {
-                setShowAdd(false);
-                setEditingItem(null);
-              }}
-              onRefresh={fetchItems}
-              showToast={showToast}
-              theme={theme}
-              initialData={editingItem}
-            />
+            <AddItemForm category={id} onCancel={() => { setShowAdd(false); setEditingItem(null); }} onRefresh={fetchItems} showToast={showToast} theme={theme} initialData={editingItem} />
           </div>
         )}
 
-        {/* ITEM GRID */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-10">
           {displayedItems.map((item, i) => (
-            <Link
-              to={`/item/${item.id}`}
-              key={item.id}
-              className="block group animate-fade-in-up"
-              style={{ animationDelay: `${i * 100}ms` }}
-            >
-              <div
-                className={`relative h-72 md:h-80 ${theme.cardBg} rounded-2xl overflow-hidden mb-4 border shadow-lg group-hover:shadow-2xl transition-all duration-500 group-hover:-translate-y-2 ${
-                  theme.name === "dark" ? "border-white/5" : "border-gray-100"
-                }`}
-              >
+            <Link to={`/item/${item.id}`} key={item.id} className="block group animate-fade-in-up" style={{ animationDelay: `${i * 100}ms` }}>
+              <div className={`relative h-72 md:h-80 ${theme.cardBg} rounded-2xl overflow-hidden mb-4 border shadow-lg group-hover:shadow-2xl transition-all duration-500 group-hover:-translate-y-2 ${theme.name === "dark" ? "border-white/5" : "border-gray-100"}`}>
                 {item.image ? (
-                  <img
-                    src={item.image}
-                    className="w-full h-full object-cover group-hover:scale-110 transition duration-1000"
-                    alt={item.name}
-                  />
+                  <img src={item.image} className="w-full h-full object-cover group-hover:scale-110 transition duration-1000" alt={item.name} />
                 ) : (
-                  <div className="flex items-center justify-center h-full opacity-10">
-                    <ImageIcon size={40} />
-                  </div>
+                  <div className="flex items-center justify-center h-full opacity-10"><ImageIcon size={40} /></div>
                 )}
-
-                {/* ADMIN BUTTONS */}
                 {isAdmin && (
                   <div className="absolute top-3 right-3 flex gap-2 z-30 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setEditingItem(item);
-                      }}
-                      className="bg-blue-600 text-white p-2 rounded-full shadow-lg hover:scale-110 transition"
-                    >
-                      <Edit2 size={14} />
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setDeleteId(item.id);
-                      }}
-                      className="bg-red-600 text-white p-2 rounded-full shadow-lg hover:scale-110 transition"
-                    >
-                      <Trash2 size={14} />
-                    </button>
+                    <button onClick={(e) => { e.preventDefault(); setEditingItem(item); }} className="bg-blue-600 text-white p-2 rounded-full shadow-lg hover:scale-110 transition"><Edit2 size={14} /></button>
+                    <button onClick={(e) => { e.preventDefault(); setDeleteId(item.id); }} className="bg-red-600 text-white p-2 rounded-full shadow-lg hover:scale-110 transition"><Trash2 size={14} /></button>
                   </div>
                 )}
-
-                {/* GRADIENT */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-60 pointer-events-none"></div>
-
                 <div className="absolute bottom-5 left-5 right-5 flex justify-between items-end">
-                  <h3 className="text-xl md:text-2xl font-serif text-white leading-tight drop-shadow-md">
-                    {item.name}
-                  </h3>
+                  <div className="flex flex-col items-start">
+                     <h3 className="text-xl md:text-2xl font-serif text-white leading-tight drop-shadow-md">{item.name}</h3>
+                     {/* WINE BODY INDICATOR ON CARD */}
+                     {item.body && <span className="text-[10px] uppercase tracking-widest text-white/70 mt-1">{item.body}</span>}
+                  </div>
                   <span className="text-sm md:text-base font-light text-white bg-white/10 backdrop-blur-md px-3 py-1 rounded-lg border border-white/20">
-                    {item.price}
+                    {/* Display logic for housepouring pricing on card */}
+                    {(item.priceGlass && item.priceGlass > 0) ? "VAR" : item.price}
                   </span>
                 </div>
               </div>
@@ -824,15 +804,7 @@ const CategoryPage = ({ isAdmin, showToast, theme }) => {
           ))}
         </div>
       </div>
-
-      <ConfirmModal
-        isOpen={!!deleteId}
-        onClose={() => setDeleteId(null)}
-        onConfirm={handleDelete}
-        title="Delete Item"
-        message="Are you sure?"
-        theme={theme}
-      />
+      <ConfirmModal isOpen={!!deleteId} onClose={() => setDeleteId(null)} onConfirm={handleDelete} title="Delete Item" message="Are you sure?" theme={theme} />
       <Footer theme={theme} />
     </div>
   );
@@ -856,133 +828,61 @@ const ItemDetailsPage = ({ theme, openSearch }) => {
       <Loader2 className="animate-spin" size={40} />
     </div>
   );
+  
+  // Handle price display for housepouring
+  const isHousepouring = (item.types && item.types.includes("Housepouring")) || item.type === "Housepouring";
 
   return (
     <div className={`min-h-screen ${theme.bgApp} ${theme.textMain} flex flex-col md:flex-row transition-colors duration-500`}>
-      
-      {/* 1. IMAGE SECTION: Optimized for Mobile Height */}
       <div className="w-full md:w-1/2 h-[40vh] md:h-screen md:sticky md:top-0 relative overflow-hidden group">
         {item.image ? (
-          <img 
-            src={item.image} 
-            className="w-full h-full object-cover transition duration-1000 group-hover:scale-105" 
-            alt={item.name} 
-          />
+          <img src={item.image} className="w-full h-full object-cover transition duration-1000 group-hover:scale-105" alt={item.name} />
         ) : (
-          <div className={`w-full h-full flex items-center justify-center ${theme.bgApp}`}>
-            <ImageIcon size={64} className={`opacity-20 ${theme.textMain}`} />
-          </div>
+          <div className={`w-full h-full flex items-center justify-center ${theme.bgApp}`}><ImageIcon size={64} className={`opacity-20 ${theme.textMain}`} /></div>
         )}
-        
-        {/* Dynamic Gradient: Vertical on mobile to help the back button pop */}
         <div className="absolute inset-0 bg-gradient-to-b md:bg-gradient-to-r from-black/60 via-transparent to-transparent pointer-events-none"></div>
-        
-        <button 
-          onClick={() => navigate(-1)} 
-          className={`absolute top-6 left-6 md:top-8 md:left-8 p-3 md:p-4 rounded-full backdrop-blur-xl shadow-2xl z-20 ${theme.name === 'dark' ? 'bg-black/40 text-white hover:bg-white hover:text-black' : 'bg-white/60 text-black hover:bg-black hover:text-white'} transition-all hover:scale-110`}
-        >
-          <ArrowLeft size={20} />
-        </button>
+        <button onClick={() => navigate(-1)} className={`absolute top-6 left-6 md:top-8 md:left-8 p-3 md:p-4 rounded-full backdrop-blur-xl shadow-2xl z-20 ${theme.name === 'dark' ? 'bg-black/40 text-white hover:bg-white hover:text-black' : 'bg-white/60 text-black hover:bg-black hover:text-white'} transition-all hover:scale-110`}><ArrowLeft size={20} /></button>
       </div>
 
-      {/* 2. CONTENT SECTION: Fixed Mobile Overlap & Padding */}
       <div className="w-full md:w-1/2 p-6 md:p-20 flex flex-col animate-slide-in">
-        
-        {/* Category & Tags: Scaled down for mobile */}
-        <div className="flex items-center gap-2 mb-4 md:mb-6 animate-fade-in-up stagger-1">
+        <div className="flex flex-wrap items-center gap-2 mb-4 md:mb-6 animate-fade-in-up stagger-1">
           <span className={`${theme.accent} tracking-[0.1em] uppercase text-[9px] md:text-xs font-bold flex items-center gap-1.5 border border-current px-2.5 py-1 rounded-full`}>
             {getCategoryIcon(item.subCategory)} {item.subCategory}
           </span>
-          {item.type && (
-            <span className={`px-2.5 py-1 rounded-full text-[9px] uppercase font-bold ${theme.cardBg} border ${theme.name === 'dark' ? 'border-white/10' : 'border-gray-200'}`}>
-              {item.type}
-            </span>
+          {/* Display multiple types */}
+          {item.types && item.types.map(t => (
+             <span key={t} className={`px-2.5 py-1 rounded-full text-[9px] uppercase font-bold ${theme.cardBg} border ${theme.name === 'dark' ? 'border-white/10' : 'border-gray-200'}`}>{t}</span>
+          ))}
+          {/* Fallback for legacy single type */}
+          {!item.types && item.type && (
+             <span className={`px-2.5 py-1 rounded-full text-[9px] uppercase font-bold ${theme.cardBg} border ${theme.name === 'dark' ? 'border-white/10' : 'border-gray-200'}`}>{item.type}</span>
+          )}
+          {/* WINE BODY BADGE */}
+          {item.body && (
+             <span className={`px-2.5 py-1 rounded-full text-[9px] uppercase font-bold bg-purple-900/20 text-purple-400 border border-purple-900/30 flex items-center gap-1`}><Grape size={10}/> {item.body}</span>
           )}
         </div>
 
-        {/* Title & Price: Responsive Sizing */}
-        <h1 className={`text-3xl md:text-7xl font-serif mb-2 md:mb-6 leading-tight ${theme.textMain} animate-fade-in-up stagger-2`}>
-          {item.name}
-        </h1>
+        <h1 className={`text-3xl md:text-7xl font-serif mb-2 md:mb-6 leading-tight ${theme.textMain} animate-fade-in-up stagger-2`}>{item.name}</h1>
+        
         <div className="text-2xl md:text-4xl font-light mb-8 md:mb-12 animate-fade-in-up stagger-3">
-          {item.price} <span className="text-xs md:text-base opacity-50 font-bold">AED</span>
+          {isHousepouring ? (
+              <div className="flex flex-col gap-1">
+                  <span className="flex items-baseline gap-2">{item.priceGlass} <span className="text-xs md:text-sm opacity-50 font-bold uppercase">Glass (150ml)</span></span>
+                  <span className="flex items-baseline gap-2 text-xl md:text-2xl opacity-70">{item.priceBottle} <span className="text-xs md:text-sm opacity-50 font-bold uppercase">Bottle</span></span>
+              </div>
+          ) : (
+              <span>{item.price} <span className="text-xs md:text-base opacity-50 font-bold">AED</span></span>
+          )}
         </div>
 
-        {/* Info Blocks: Tighter on mobile, Airy on desktop */}
         <div className="space-y-8 md:space-y-14 animate-fade-in-up stagger-4">
-          
-          {/* Description */}
-          <div>
-            <h4 className={`text-[10px] md:text-xs font-bold uppercase tracking-widest ${theme.textMuted} mb-2 md:mb-3 flex items-center gap-2`}>
-              <FileText size={14} /> Description
-            </h4>
-            <p className="text-base md:text-xl leading-relaxed opacity-90 font-light">{item.description}</p>
-          </div>
-
-          {/* Ingredients */}
-          {item.ingredients && (
-            <div>
-              <h4 className={`text-[10px] md:text-xs font-bold uppercase tracking-widest ${theme.textMuted} mb-3 md:mb-4 flex items-center gap-2`}>
-                <UtensilsCrossed size={14} /> Ingredients
-              </h4>
-              <ul className="grid grid-cols-1 gap-2 md:gap-3">
-                {item.ingredients.split(',').map((ing, i) => (
-                  <li key={i} className="flex items-start gap-3 opacity-80 font-light text-sm md:text-base">
-                    <span className={`mt-2 w-1.5 h-1.5 rounded-full flex-shrink-0 ${theme.accentBg}`}></span>
-                    <span>{ing.trim()}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {/* Method / Notes: Better mobile padding */}
-          {item.method && (
-            <div className={`p-5 md:p-8 rounded-2xl border ${theme.name === 'dark' ? "bg-white/5 border-white/10" : "bg-gray-50 border-gray-100"}`}>
-              <h4 className="flex items-center gap-2 text-[10px] md:text-xs font-bold uppercase tracking-widest mb-3 md:mb-4">
-                <BookOpen size={16} /> Notes / Method
-              </h4>
-              <p className="text-xs md:text-base opacity-80 font-light whitespace-pre-wrap leading-relaxed">{item.method}</p>
-            </div>
-          )}
-
+          <div><h4 className={`text-[10px] md:text-xs font-bold uppercase tracking-widest ${theme.textMuted} mb-2 md:mb-3 flex items-center gap-2`}><FileText size={14} /> Description</h4><p className="text-base md:text-xl leading-relaxed opacity-90 font-light">{item.description}</p></div>
+          {item.ingredients && (<div><h4 className={`text-[10px] md:text-xs font-bold uppercase tracking-widest ${theme.textMuted} mb-3 md:mb-4 flex items-center gap-2`}><UtensilsCrossed size={14} /> Ingredients</h4><ul className="grid grid-cols-1 gap-2 md:gap-3">{item.ingredients.split(',').map((ing, i) => (<li key={i} className="flex items-start gap-3 opacity-80 font-light text-sm md:text-base"><span className={`mt-2 w-1.5 h-1.5 rounded-full flex-shrink-0 ${theme.accentBg}`}></span><span>{ing.trim()}</span></li>))}</ul></div>)}
+          {item.method && (<div className={`p-5 md:p-8 rounded-2xl border ${theme.name === 'dark' ? "bg-white/5 border-white/10" : "bg-gray-50 border-gray-100"}`}><h4 className="flex items-center gap-2 text-[10px] md:text-xs font-bold uppercase tracking-widest mb-3 md:mb-4"><BookOpen size={16} /> Notes / Method</h4><p className="text-xs md:text-base opacity-80 font-light whitespace-pre-wrap leading-relaxed">{item.method}</p></div>)}
           <div className="space-y-8 md:space-y-10">
-            {/* Allergens: flex-wrap ensures they don't break the layout */}
-            {item.allergens && (
-              <div>
-                <h4 className="flex items-center gap-2 text-[10px] md:text-xs font-bold uppercase tracking-widest text-red-400 mb-3 md:mb-4">
-                  <AlertTriangle size={14} /> Allergens
-                </h4>
-                <div className="flex flex-wrap gap-2 md:gap-3">
-                  {item.allergens.split(',').map(tag => (
-                    <button 
-                      key={tag} 
-                      onClick={() => openSearch(tag.trim())} 
-                      className={`flex items-center gap-1.5 md:gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full text-[10px] md:text-xs font-bold border transition-all active:scale-95 ${theme.name === 'dark' ? 'border-red-900/50 text-red-200 bg-red-900/10' : 'border-red-200 text-red-600 bg-red-50'}`}
-                    >
-                      {getAllergenIcon(tag)} {tag.trim()}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Trivia: Centered & Space-optimized */}
-            {item.trivia && (
-              <div className="pt-2 md:pt-4">
-                <h4 className="flex items-center justify-center gap-2 text-[10px] md:text-xs font-bold uppercase tracking-widest mb-4 md:mb-6">
-                  <Sparkles size={14} className="text-yellow-500" /> Trivia
-                </h4>
-                <ul className="space-y-3 md:space-y-4">
-                  {item.trivia.split('.').filter(t => t.trim().length > 0).map((t, i) => (
-                    <li key={i} className="flex flex-col items-center text-center gap-2 md:gap-3 text-xs md:text-sm opacity-90 italic bg-yellow-500/10 p-5 md:p-8 rounded-2xl border border-yellow-500/20">
-                      <span className="text-yellow-500 text-lg md:text-xl">✨</span>
-                      <span className="leading-relaxed">{t.trim()}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
+            {item.allergens && (<div><h4 className="flex items-center gap-2 text-[10px] md:text-xs font-bold uppercase tracking-widest text-red-400 mb-3 md:mb-4"><AlertTriangle size={14} /> Allergens</h4><div className="flex flex-wrap gap-2 md:gap-3">{item.allergens.split(',').map(tag => (<button key={tag} onClick={() => openSearch(tag.trim())} className={`flex items-center gap-1.5 md:gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full text-[10px] md:text-xs font-bold border transition-all active:scale-95 ${theme.name === 'dark' ? 'border-red-900/50 text-red-200 bg-red-900/10' : 'border-red-200 text-red-600 bg-red-50'}`}>{getAllergenIcon(tag)} {tag.trim()}</button>))}</div></div>)}
+            {item.trivia && (<div className="pt-2 md:pt-4"><h4 className="flex items-center justify-center gap-2 text-[10px] md:text-xs font-bold uppercase tracking-widest mb-4 md:mb-6"><Sparkles size={14} className="text-yellow-500" /> Trivia</h4><ul className="space-y-3 md:space-y-4">{item.trivia.split('.').filter(t => t.trim().length > 0).map((t, i) => (<li key={i} className="flex flex-col items-center text-center gap-2 md:gap-3 text-xs md:text-sm opacity-90 italic bg-yellow-500/10 p-5 md:p-8 rounded-2xl border border-yellow-500/20"><span className="text-yellow-500 text-lg md:text-xl">✨</span><span className="leading-relaxed">{t.trim()}</span></li>))}</ul></div>)}
           </div>
         </div>
       </div>
