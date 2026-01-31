@@ -799,7 +799,11 @@ const CategoryPage = ({ isAdmin, showToast, theme }) => {
                   </div>
                   <span className="text-sm md:text-base font-light text-white bg-white/10 backdrop-blur-md px-3 py-1 rounded-lg border border-white/20">
                     {/* Display logic for housepouring pricing on card */}
-                    {(item.priceGlass && item.priceGlass > 0) ? "VAR" : item.price}
+                    {(item.priceGlass && item.priceGlass > 0) ? (
+                        <span className="text-xs font-bold">{item.priceGlass} <span className="opacity-50 text-[10px] font-normal">/</span> {item.priceBottle}</span>
+                    ) : (
+                        item.price
+                    )}
                   </span>
                 </div>
               </div>
