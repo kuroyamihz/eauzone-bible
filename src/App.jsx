@@ -612,17 +612,28 @@ const Navbar = ({ toggleSidebar, toggleLogin, isAdmin, toggleTheme, theme, openS
     );
 };
 
-const ContentRow = ({ title, categoryLink, theme }) => {
+const ContentRow = ({ title, categoryLink, sources, theme }) => {
   const [items, setItems] = useState([]);
+  // If sources array is provided, use it. Otherwise, use the title as the single category.
+  const queryCategories = sources || [title]; 
+
   const description = DESCRIPTIONS[title] || "Curated selection.";
+
   useEffect(() => {
     const fetchData = async () => {
-      const q = query(collection(db, "menu-items"), where("subCategory", "==", title), limit(6));
+      // 'in' operator allows up to 10 categories to be queried at once
+      const q = query(
+          collection(db, "menu-items"), 
+          where("subCategory", "in", queryCategories), 
+          limit(10) // Increased limit to show more variety
+      );
       const snapshot = await getDocs(q);
-      setItems(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      // Randomize the results so it's not always sorted by category
+      const fetchedItems = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setItems(fetchedItems.sort(() => 0.5 - Math.random())); 
     };
     fetchData();
-  }, [title]);
+  }, [title, JSON.stringify(queryCategories)]); // Re-run if sources change
 
   if (items.length === 0) return null;
 
@@ -632,12 +643,18 @@ const ContentRow = ({ title, categoryLink, theme }) => {
         <div className="flex w-full justify-between items-end">
              <div className="flex-1"></div> 
              <div className="flex-1 text-center">
-                <div className="flex items-center justify-center gap-2 mb-2 opacity-50">{getCategoryIcon(title)}</div>
+                <div className="flex items-center justify-center gap-2 mb-2 opacity-50">
+                    {/* If mixed, show a generic Star, otherwise specific icon */}
+                    {sources ? <Sparkles size={18}/> : getCategoryIcon(title)}
+                </div>
                 <h2 className={`text-4xl font-serif ${theme.textMain}`}>{title}</h2>
                 <p className={`text-sm ${theme.textMuted} mt-2 tracking-wide font-light`}>{description}</p>
              </div>
              <div className="flex-1 text-right">
-                <Link to={categoryLink} className={`text-xs font-bold ${theme.accent} uppercase inline-flex items-center gap-1 hover:gap-2 transition-all`}>View All <ChevronRight size={14} /></Link>
+                {/* Only show View All link if it points to a valid single category page */}
+                {!sources && (
+                    <Link to={categoryLink} className={`text-xs font-bold ${theme.accent} uppercase inline-flex items-center gap-1 hover:gap-2 transition-all`}>View All <ChevronRight size={14} /></Link>
+                )}
              </div>
         </div>
       </div>
@@ -650,7 +667,9 @@ const ContentRow = ({ title, categoryLink, theme }) => {
              
              <div className="absolute bottom-0 left-0 right-0 p-8 z-20 transform transition-transform duration-500 group-hover:-translate-y-4">
                 <h3 className="text-white font-serif text-3xl leading-tight mb-2 text-left drop-shadow-md">{item.name}</h3>
-                <p className={`${theme.accent} font-mono text-xl text-left drop-shadow-sm`}>{item.price} <span className="text-xs opacity-70">AED</span></p>
+                <p className={`${theme.accent} font-mono text-xl text-left drop-shadow-sm`}>
+                    {(item.priceGlass && item.priceGlass > 0) ? "VAR" : item.price} <span className="text-xs opacity-70">AED</span>
+                </p>
              </div>
 
              <div className={`absolute inset-0 ${theme.hoverOverlay} opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex flex-col justify-center items-start p-8 z-30 backdrop-blur-sm`}>
@@ -665,7 +684,6 @@ const ContentRow = ({ title, categoryLink, theme }) => {
 };
 
 const HomePage = ({ openSearch, theme }) => {
-  const SECTIONS = ["Salads", "Sushi", "Bites", "Mains", "Cocktails"];
   return (
     <div className={`min-h-screen ${theme.bgApp} ${theme.textMain}`}>
       <div className="relative h-[100dvh] w-full overflow-hidden">
@@ -683,9 +701,30 @@ const HomePage = ({ openSearch, theme }) => {
            </button>
         </div>
       </div>
+      
       <div className="py-24">
-         {SECTIONS.map(cat => <ContentRow key={cat} title={cat} categoryLink={`/category/${cat}`} theme={theme} />)}
+         {/* 1. MIXED ROW: Shows Sushi, Bites, and Salads together */}
+         <ContentRow 
+            title="Starters Collection" 
+            sources={["Sushi", "Bites", "Salads"]} 
+            theme={theme} 
+         />
+
+         {/* 2. SINGLE ROW: Just Mains */}
+         <ContentRow 
+            title="Mains" 
+            categoryLink="/category/Mains" 
+            theme={theme} 
+         />
+
+         {/* 3. MIXED ROW: Drinks Highlights */}
+         <ContentRow 
+            title="Liquid Art" 
+            sources={["Cocktails", "Mocktails", "Wines"]} 
+            theme={theme} 
+         />
       </div>
+      
       <Footer theme={theme} />
     </div>
   );
