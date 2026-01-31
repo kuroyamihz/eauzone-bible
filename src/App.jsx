@@ -143,7 +143,7 @@ const GlobalStyles = ({ theme }) => (
 
 const SITE_STRUCTURE = { 
   "Food": ["Soups", "Salads", "Sushi", "Bites", "Mains", "Kids", "Desserts"], 
-  "Beverage": ["Coffee-Tea", "Soft-Drinks", "Mocktails", "Cocktails", "Spirits", "Beers", "Wines"], 
+  "Beverage": ["Coffee & Tea", "Soft-Drinks", "Mocktails", "Cocktails", "Spirits", "Beers", "Wines"], 
   "Misc": ["HACCP", "Floor-Plan", "FAQ"] 
 };
 
@@ -154,7 +154,7 @@ const SUBCATEGORIES = {
     "Cocktails": ["Signature", "Classics"],
     "Mocktails": ["Signature", "Classics"],
     "Beers": ["Draught", "Bottles"],
-    "Coffee-Tea": ["Coffee", "Tea", "Shakes & Smoothies"],
+    "Coffee & Tea": ["Coffee", "Tea", "Shakes & Smoothies"],
     "Soft-Drinks": ["Water", "Sodas", "Juices"]
 };
 
@@ -250,8 +250,8 @@ const getBackground = (category, subType) => {
       "Cocktails": "https://images.unsplash.com/photo-1514362545857-3bc16549766b?auto=format&fit=crop&q=80",
       "Mocktails": "https://images.unsplash.com/photo-1534353473418-4cfa6c56fd38?auto=format&fit=crop&q=80",
       "Beers": "https://images.unsplash.com/photo-1535958636474-b021ee8876a3?auto=format&fit=crop&q=80",
-      "Coffee-Tea": "https://images.unsplash.com/photo-1447933601403-0c6688de566e?auto=format&fit=crop&q=80",
-      "Coffee-Tea-Shakes & Smoothies": "https://images.unsplash.com/photo-1577805947697-b9b2d5d39c96?auto=format&fit=crop&q=80",
+      "Coffee & Tea": "https://images.unsplash.com/photo-1447933601403-0c6688de566e?auto=format&fit=crop&q=80",
+      "Coffee & Tea-Shakes & Smoothies": "https://images.unsplash.com/photo-1577805947697-b9b2d5d39c96?auto=format&fit=crop&q=80",
       "Soft-Drinks": "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&q=80",
       "Misc": "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&q=80",
       "HACCP": "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&q=80",
