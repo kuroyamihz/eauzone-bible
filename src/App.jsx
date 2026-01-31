@@ -398,21 +398,27 @@ const LoginModal = ({ isOpen, onClose, onLogin, showToast, theme }) => {
   );
 };
 
+// --- CRITICAL FIX: Safe Data Initialization for AddItemForm ---
 const AddItemForm = ({ category, onCancel, onRefresh, showToast, theme, initialData }) => {
     const isEdit = !!initialData;
-    // 'types' is now an array to support multiple sub-categories
-    const [data, setData] = useState(initialData || { 
-        name:"", price:"", priceGlass: "", priceBottle: "", description:"", 
-        subCategory: category, image: null, types: [], 
-        ingredients: "", method: "", allergens: "", trivia: "", body: "" 
-    });
     
-    // Fallback for legacy single-string type
-    useEffect(() => {
-        if(initialData && initialData.type && !Array.isArray(initialData.types)) {
-            setData(d => ({...d, types: [initialData.type]}));
+    // Lazy initializer to safe-guard against old data types
+    const [data, setData] = useState(() => {
+        const defaults = { 
+            name:"", price:"", priceGlass: "", priceBottle: "", description:"", 
+            subCategory: category, image: null, types: [], 
+            ingredients: "", method: "", allergens: "", trivia: "", body: "" 
+        };
+        if (initialData) {
+            // Merge defaults + initialData + forced array conversion for types
+            return {
+                ...defaults,
+                ...initialData,
+                types: Array.isArray(initialData.types) ? initialData.types : (initialData.type ? [initialData.type] : [])
+            };
         }
-    }, [initialData]);
+        return defaults;
+    });
 
     const [loading, setLoading] = useState(false);
     const subs = SUBCATEGORIES[category] || [];
@@ -431,8 +437,8 @@ const AddItemForm = ({ category, onCancel, onRefresh, showToast, theme, initialD
         e.preventDefault(); setLoading(true);
         let url = data.image; 
         if (data.image instanceof File) { url = await uploadImage(data.image); }
-        // Flatten price structure if needed, or keep logic simple
-        const finalPrice = isHousepouring ? 0 : Number(data.price); // Placeholder for main price if split
+        
+        const finalPrice = isHousepouring ? 0 : Number(data.price); 
         
         const payload = { 
             ...data, 
@@ -468,7 +474,6 @@ const AddItemForm = ({ category, onCancel, onRefresh, showToast, theme, initialD
                    </div>
                 )}
                 
-                {/* WINE BODY SELECTION */}
                 {isWine && (
                     <div className="space-y-1 mb-4">
                         <label className={`text-xs font-bold uppercase ${theme.textMuted}`}>Wine Body</label>
@@ -482,7 +487,6 @@ const AddItemForm = ({ category, onCancel, onRefresh, showToast, theme, initialD
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-1"><label className={`text-xs font-bold uppercase ${theme.textMuted}`}>Name</label><input value={data.name} className={`w-full p-3 rounded-xl ${theme.inputBg} outline-none transition-all focus:ring-2 ring-opacity-50`} onChange={e=>setData({...data, name: e.target.value})} required/></div>
                     
-                    {/* CONDITIONAL PRICING FOR HOUSEPOURING WINES */}
                     {isWine && isHousepouring ? (
                         <div className="grid grid-cols-2 gap-2">
                              <div className="space-y-1"><label className={`text-xs font-bold uppercase ${theme.textMuted}`}>Glass (150ml)</label><input type="number" value={data.priceGlass} className={`w-full p-3 rounded-xl ${theme.inputBg} outline-none`} onChange={e=>setData({...data, priceGlass: e.target.value})} required/></div>
@@ -535,7 +539,7 @@ const AddItemForm = ({ category, onCancel, onRefresh, showToast, theme, initialD
 
 const Navbar = ({ toggleSidebar, toggleLogin, isAdmin, toggleTheme, theme, openSearch, isSearchOpen, closeSearch }) => {
     const [term, setTerm] = useState("");
-    const [filterType, setFilterType] = useState("Name"); // Name, Category, Allergen
+    const [filterType, setFilterType] = useState("Name"); 
     const [results, setResults] = useState([]);
 
     const handleSearchInput = async (val, type) => {
@@ -549,7 +553,6 @@ const Navbar = ({ toggleSidebar, toggleLogin, isAdmin, toggleTheme, theme, openS
         const filtered = allItems.filter(i => {
             if (type === "Allergen") return i.allergens?.toLowerCase().includes(lower);
             if (type === "Category") return i.subCategory?.toLowerCase().includes(lower) || (i.types && i.types.some(t => t.toLowerCase().includes(lower)));
-            // Default Name/Desc search
             return i.name.toLowerCase().includes(lower) || i.description?.toLowerCase().includes(lower);
         });
         setResults(filtered.slice(0, 5));
