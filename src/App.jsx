@@ -6,7 +6,9 @@ import {
   Milk, Wheat, Fish, Wine, Flame, Leaf, Sparkles, 
   UtensilsCrossed, Coffee, Beer, Martini, GlassWater, Baby, Cookie, 
   FileText, Map, CircleHelp, ShieldCheck, Citrus, Droplets, Soup,
-  Recycle, Sprout, Filter, Grape
+  Recycle, Sprout, Filter, Grape, Beef,
+  // These were missing:
+  Egg, Carrot, Flower, FlaskConical, TreeDeciduous, Shell
 } from 'lucide-react';
 import { db, CLOUD_NAME, UPLOAD_PRESET } from './firebase';
 import { collection, addDoc, getDocs, deleteDoc, updateDoc, doc, getDoc, query, where, limit } from 'firebase/firestore';
