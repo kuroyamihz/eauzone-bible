@@ -156,7 +156,7 @@ const SUBCATEGORIES = {
     "Mains": ["Seafoods", "Meat & Poultry", "Rice & Noodle", "Sharing", "Sides"],
     
     // NEW STARTERS (Combined)
-    "Starters": ["Starters", "Salads"],
+    "Salads": ["Starters", "Salads"],
     
     // SUSHI OVERHAUL
     "Sushi": ["Maki", "Rolls", "Sashimi", "Nigiri", "Sharing"],
@@ -246,7 +246,7 @@ const getBackground = (category, subType) => {
   const MAP = {
       "Soups": "https://unsplash.com/photos/a-bowl-of-soup-on-a-wooden-table-ZrtDZRfxwog",
       // Starters
-      "Salads": "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?auto=format&fit=crop&q=80",
+      "Salads": "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&q=80",
       "Salads-Salads": "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&q=80",
       "Salads-Starters": "https://images.unsplash.com/photo-1541544741938-0af808871cc0?auto=format&fit=crop&q=80",
       
