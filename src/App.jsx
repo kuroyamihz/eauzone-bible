@@ -146,7 +146,7 @@ const GlobalStyles = ({ theme }) => (
 
 const SITE_STRUCTURE = {
 
-  "Food": ["Soups", "Salads", "Sushi", "Bites", "Mains", "Kids", "Desserts"],
+  "Food": ["Soups", "Starters", "Sushi", "Bites", "Mains", "Kids", "Desserts"],
   "Beverage": ["Coffee & Tea", "Soft-Drinks", "Mocktails", "Cocktails", "Spirits", "Beers", "Wines"],
   "Misc": ["HACCP", "Floor-Plan", "FAQ"]
   };
@@ -173,6 +173,8 @@ const COMMON_ALLERGENS = ["Dairy", "Gluten", "Tree Nuts", "Peanut", "Seafood", "
 const WINE_BODIES = ["Light Bodied", "Medium Bodied", "Full Bodied"];
 
 const DESCRIPTIONS = {
+  "Soups": "Warm, comforting bowls rich with Asian aromatics and depth.",
+  "Bites": "Small plates with big personality. Perfect for sharing.",
   // --- STARTERS & SALADS ---
   "Starters": "A curated beginning. Light bites and vibrant greens.",
   "Starters-Starters": "Small plates with big personality. Perfect for opening the palate.",
@@ -242,6 +244,7 @@ const DESCRIPTIONS = {
 
 const getBackground = (category, subType) => {
   const MAP = {
+      "Soups": "https://unsplash.com/photos/a-bowl-of-soup-on-a-wooden-table-ZrtDZRfxwog",
       // Starters
       "Starters": "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?auto=format&fit=crop&q=80",
       "Starters-Salads": "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&q=80",
