@@ -7,7 +7,8 @@ import {
   UtensilsCrossed, Coffee, Beer, Martini, GlassWater, Baby, Cookie, 
   FileText, Map, CircleHelp, ShieldCheck, Citrus, Droplets, Soup,
   Recycle, Sprout, Filter, Grape, Beef,
-  // These were missing:
+  // Added Eye icons for the Simple Mode toggle
+  Eye, EyeOff,
   Egg, Carrot, Flower, FlaskConical, TreeDeciduous, Shell
 } from 'lucide-react';
 import { db, CLOUD_NAME, UPLOAD_PRESET } from './firebase';
@@ -144,13 +145,22 @@ const GlobalStyles = ({ theme }) => (
 // --- 2. DATA CONSTANTS ---
 
 const SITE_STRUCTURE = { 
-  "Food": ["Soups", "Salads", "Sushi", "Bites", "Mains", "Kids", "Desserts"], 
+  // Updated Structure: Grouped Starters, Expanded Sushi
+  "Food": ["Starters", "Sushi", "Mains", "Kids", "Desserts"], 
   "Beverage": ["Coffee & Tea", "Soft-Drinks", "Mocktails", "Cocktails", "Spirits", "Beers", "Wines"], 
   "Misc": ["HACCP", "Floor-Plan", "FAQ"] 
 };
 
 const SUBCATEGORIES = {
-    "Mains": ["Seafoods", "Meat & Poultry", "Rice & Noodle", "Sharing"],
+    // UPDATED MAINS
+    "Mains": ["Seafoods", "Meat & Poultry", "Rice & Noodle", "Sharing", "Sides"],
+    
+    // NEW STARTERS (Combined)
+    "Starters": ["Starters", "Salads"],
+    
+    // SUSHI OVERHAUL
+    "Sushi": ["Maki", "Rolls", "Sashimi", "Nigiri", "Sharing"],
+
     "Wines": ["Housepouring", "Red", "White", "Rose", "Sparkling", "Champagne", "Sake"],
     "Spirits": ["Housepouring", "Gin", "Vodka", "Whisky", "Rum", "Tequila", "Shochu", "Liqueur"],
     "Cocktails": ["Signature", "Classics"],
@@ -164,19 +174,31 @@ const COMMON_ALLERGENS = ["Dairy", "Gluten", "Tree Nuts", "Peanut", "Seafood", "
 const WINE_BODIES = ["Light Bodied", "Medium Bodied", "Full Bodied"];
 
 const DESCRIPTIONS = {
-  // Food
-  "Soups": "Warm, comforting bowls rich with Asian aromatics and depth.",
-  "Salads": "Crisp, organic greens meet bold Asian dressings. A fresh start.",
+  // --- STARTERS & SALADS ---
+  "Starters": "A curated beginning. Light bites and vibrant greens.",
+  "Starters-Starters": "Small plates with big personality. Perfect for opening the palate.",
+  "Starters-Salads": "Crisp, organic greens meet bold Asian dressings. A fresh start.",
+  
+  // --- SUSHI OVERHAUL ---
   "Sushi": "Precision cuts, vinegared rice, and the ocean's finest catch.",
-  "Bites": "Small plates with big personality. Perfect for sharing.",
+  "Sushi-Maki": "Classic cylindrical rolls wrapped in crisp nori.",
+  "Sushi-Rolls": "Modern uramaki creations with bold flavors and textures.",
+  "Sushi-Sashimi": "Pure, distinct slices of fresh raw fish without rice.",
+  "Sushi-Nigiri": "Hand-pressed vinegared rice topped with premium seafood.",
+  "Sushi-Sharing": "Grand platters showcasing the chef's finest selection.",
+
+  // --- MAINS ---
   "Mains": "The main event. Robust flavors bridging East and West.",
   "Mains-Seafoods": "Fresh catches prepared with delicate Asian techniques.",
   "Mains-Meat & Poultry": "Prime cuts, slow-cooked textures, and bold marinades.",
   "Mains-Rice & Noodle": "The essential staples, elevated with wok-hei and premium ingredients.",
   "Mains-Sharing": "Generous platters designed to bring people together.",
+  "Mains-Sides": "The perfect accompaniments to complete your meal.",
+
   "Kids": "Gourmet favorites tailored for our younger guests.",
   "Desserts": "The sweet finale. Indulgent textures and delicate sweetness.",
-  // Beverage
+  
+  // Beverage (Unchanged)
   "Coffee & Tea": "Artisan roasted beans, rare tea blends, and creamy delights.",
   "Coffee & Tea-Coffee": "Barista-crafted espresso, latte, and cold brew selections.",
   "Coffee & Tea-Tea": "Premium loose-leaf teas and herbal infusions.",
@@ -221,18 +243,30 @@ const DESCRIPTIONS = {
 
 const getBackground = (category, subType) => {
   const MAP = {
-      // Food
-      "Salads": "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&q=80",
+      // Starters
+      "Starters": "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?auto=format&fit=crop&q=80",
+      "Starters-Salads": "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&q=80",
+      "Starters-Starters": "https://images.unsplash.com/photo-1541544741938-0af808871cc0?auto=format&fit=crop&q=80",
+      
+      // Sushi (New)
       "Sushi": "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?auto=format&fit=crop&q=80",
-      "Bites": "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?auto=format&fit=crop&q=80",
-      "Soups": "https://images.unsplash.com/photo-1547592166-23acbe3a624b?auto=format&fit=crop&q=80",
-      "Kids": "https://images.unsplash.com/photo-1621255562761-f44604928b52?auto=format&fit=crop&q=80",
-      "Desserts": "https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?auto=format&fit=crop&q=80",
+      "Sushi-Maki": "https://images.unsplash.com/photo-1553621042-f6e147245754?auto=format&fit=crop&q=80",
+      "Sushi-Rolls": "https://images.unsplash.com/photo-1559339352-11d035aa65de?auto=format&fit=crop&q=80",
+      "Sushi-Sashimi": "https://images.unsplash.com/photo-1534482421-64566f976cfa?auto=format&fit=crop&q=80",
+      "Sushi-Nigiri": "https://images.unsplash.com/photo-1617196019294-dc35f53eb31d?auto=format&fit=crop&q=80",
+      "Sushi-Sharing": "https://images.unsplash.com/photo-1633478062482-790e3b5dd810?auto=format&fit=crop&q=80",
+
+      // Mains
       "Mains": "https://images.unsplash.com/photo-1544025162-d76690b67f61?auto=format&fit=crop&q=80",
       "Mains-Seafoods": "https://images.unsplash.com/photo-1519708227418-c8fd9a3a2750?auto=format&fit=crop&q=80",
       "Mains-Meat & Poultry": "https://images.unsplash.com/photo-1600891964092-4316c288032e?auto=format&fit=crop&q=80",
       "Mains-Rice & Noodle": "https://images.unsplash.com/photo-1552611052-33e04de081de?auto=format&fit=crop&q=80",
       "Mains-Sharing": "https://images.unsplash.com/photo-1544025162-d76690b67f61?auto=format&fit=crop&q=80",
+      "Mains-Sides": "https://images.unsplash.com/photo-1534939561126-855b8675edd7?auto=format&fit=crop&q=80",
+
+      // Others
+      "Kids": "https://images.unsplash.com/photo-1621255562761-f44604928b52?auto=format&fit=crop&q=80",
+      "Desserts": "https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?auto=format&fit=crop&q=80",
       // Drinks
       "Wines": "https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?auto=format&fit=crop&q=80",
       "Wines-Red": "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&q=80",
@@ -267,9 +301,9 @@ const getCategoryIcon = (name) => {
     // Food
     if (n.includes('soup')) return <Soup size={18} />;
     if (n.includes('salad') || n.includes('veg')) return <Leaf size={18} />;
-    if (n.includes('sushi') || n.includes('fish')) return <Fish size={18} />;
-    if (n.includes('bite') || n.includes('kids')) return <Baby size={18} />;
-    if (n.includes('main')) return <UtensilsCrossed size={18} />;
+    if (n.includes('sushi') || n.includes('fish') || n.includes('maki') || n.includes('nigiri')) return <Fish size={18} />;
+    if (n.includes('bite') || n.includes('kids') || n.includes('starter')) return <Baby size={18} />;
+    if (n.includes('main') || n.includes('sides')) return <UtensilsCrossed size={18} />;
     if (n.includes('dessert')) return <Cookie size={18} />;
     // Drinks
     if (n.includes('coffee') || n.includes('tea')) return <Coffee size={18} />;
@@ -503,7 +537,7 @@ const AddItemForm = ({ category, onCancel, onRefresh, showToast, theme, initialD
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-1"><label className={`text-xs font-bold uppercase ${theme.textMuted}`}>Ingredients</label><textarea value={data.ingredients} className={`w-full p-3 rounded-xl ${theme.inputBg} outline-none h-24 resize-none`} onChange={e=>setData({...data, ingredients: e.target.value})}/></div>
-                    <div className="space-y-1"><label className={`text-xs font-bold uppercase ${theme.textMuted}`}>Method/Notes</label><textarea value={data.method} className={`w-full p-3 rounded-xl ${theme.inputBg} outline-none h-24 resize-none`} onChange={e=>setData({...data, method: e.target.value})}/></div>
+                    <div className="space-y-1"><label className={`text-xs font-bold uppercase ${theme.textMuted}`}>Notes</label><textarea value={data.method} className={`w-full p-3 rounded-xl ${theme.inputBg} outline-none h-24 resize-none`} onChange={e=>setData({...data, method: e.target.value})}/></div>
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -705,10 +739,10 @@ const HomePage = ({ openSearch, theme }) => {
       </div>
       
       <div className="py-24">
-         {/* 1. MIXED ROW: Shows Sushi, Bites, and Salads together */}
+         {/* 1. MIXED ROW: Shows Sushi, Starters, and Salads together */}
          <ContentRow 
             title="Starters Collection" 
-            sources={["Sushi", "Bites", "Salads"]} 
+            sources={["Sushi", "Starters"]} 
             theme={theme} 
          />
 
@@ -862,6 +896,8 @@ const ItemDetailsPage = ({ theme, openSearch }) => {
   const { itemId } = useParams();
   const navigate = useNavigate();
   const [item, setItem] = useState(null);
+  // NEW: State for Toggle "Simple Mode"
+  const [isSimple, setIsSimple] = useState(false);
 
   useEffect(() => {
     const f = async () => {
@@ -877,7 +913,6 @@ const ItemDetailsPage = ({ theme, openSearch }) => {
     </div>
   );
   
-  // Handle price display for housepouring
   const isHousepouring = (item.types && item.types.includes("Housepouring")) || item.type === "Housepouring";
 
   return (
@@ -893,22 +928,32 @@ const ItemDetailsPage = ({ theme, openSearch }) => {
       </div>
 
       <div className="w-full md:w-1/2 p-6 md:p-20 flex flex-col animate-slide-in">
-        <div className="flex flex-wrap items-center gap-2 mb-4 md:mb-6 animate-fade-in-up stagger-1">
-          <span className={`${theme.accent} tracking-[0.1em] uppercase text-[9px] md:text-xs font-bold flex items-center gap-1.5 border border-current px-2.5 py-1 rounded-full`}>
-            {getCategoryIcon(item.subCategory)} {item.subCategory}
-          </span>
-          {/* Display multiple types */}
-          {item.types && item.types.map(t => (
-             <span key={t} className={`px-2.5 py-1 rounded-full text-[9px] uppercase font-bold ${theme.cardBg} border ${theme.name === 'dark' ? 'border-white/10' : 'border-gray-200'}`}>{t}</span>
-          ))}
-          {/* Fallback for legacy single type */}
-          {!item.types && item.type && (
-             <span className={`px-2.5 py-1 rounded-full text-[9px] uppercase font-bold ${theme.cardBg} border ${theme.name === 'dark' ? 'border-white/10' : 'border-gray-200'}`}>{item.type}</span>
-          )}
-          {/* WINE BODY BADGE */}
-          {item.body && (
-             <span className={`px-2.5 py-1 rounded-full text-[9px] uppercase font-bold bg-purple-900/20 text-purple-400 border border-purple-900/30 flex items-center gap-1`}><Grape size={10}/> {item.body}</span>
-          )}
+        
+        {/* Header Row: Badges + Toggle */}
+        <div className="flex justify-between items-start mb-4 md:mb-6 animate-fade-in-up stagger-1">
+            <div className="flex flex-wrap items-center gap-2">
+                <span className={`${theme.accent} tracking-[0.1em] uppercase text-[9px] md:text-xs font-bold flex items-center gap-1.5 border border-current px-2.5 py-1 rounded-full`}>
+                    {getCategoryIcon(item.subCategory)} {item.subCategory}
+                </span>
+                {item.types && item.types.map(t => (
+                    <span key={t} className={`px-2.5 py-1 rounded-full text-[9px] uppercase font-bold ${theme.cardBg} border ${theme.name === 'dark' ? 'border-white/10' : 'border-gray-200'}`}>{t}</span>
+                ))}
+                {!item.types && item.type && (
+                    <span className={`px-2.5 py-1 rounded-full text-[9px] uppercase font-bold ${theme.cardBg} border ${theme.name === 'dark' ? 'border-white/10' : 'border-gray-200'}`}>{item.type}</span>
+                )}
+                {item.body && (
+                    <span className={`px-2.5 py-1 rounded-full text-[9px] uppercase font-bold bg-purple-900/20 text-purple-400 border border-purple-900/30 flex items-center gap-1`}><Grape size={10}/> {item.body}</span>
+                )}
+            </div>
+            
+            {/* TOGGLE BUTTON */}
+            <button 
+                onClick={() => setIsSimple(!isSimple)}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all border ${isSimple ? theme.accentBg + ' text-white border-transparent' : theme.textMuted + ' border-gray-500/20'}`}
+            >
+                {isSimple ? <EyeOff size={14}/> : <Eye size={14}/>}
+                {isSimple ? "Simplified" : "Full View"}
+            </button>
         </div>
 
         <h1 className={`text-3xl md:text-7xl font-serif mb-2 md:mb-6 leading-tight ${theme.textMain} animate-fade-in-up stagger-2`}>{item.name}</h1>
@@ -926,11 +971,27 @@ const ItemDetailsPage = ({ theme, openSearch }) => {
 
         <div className="space-y-8 md:space-y-14 animate-fade-in-up stagger-4">
           <div><h4 className={`text-[10px] md:text-xs font-bold uppercase tracking-widest ${theme.textMuted} mb-2 md:mb-3 flex items-center gap-2`}><FileText size={14} /> Description</h4><p className="text-base md:text-xl leading-relaxed opacity-90 font-light">{item.description}</p></div>
+          
           {item.ingredients && (<div><h4 className={`text-[10px] md:text-xs font-bold uppercase tracking-widest ${theme.textMuted} mb-3 md:mb-4 flex items-center gap-2`}><UtensilsCrossed size={14} /> Ingredients</h4><ul className="grid grid-cols-1 gap-2 md:gap-3">{item.ingredients.split(',').map((ing, i) => (<li key={i} className="flex items-start gap-3 opacity-80 font-light text-sm md:text-base"><span className={`mt-2 w-1.5 h-1.5 rounded-full flex-shrink-0 ${theme.accentBg}`}></span><span>{ing.trim()}</span></li>))}</ul></div>)}
-          {item.method && (<div className={`p-5 md:p-8 rounded-2xl border ${theme.name === 'dark' ? "bg-white/5 border-white/10" : "bg-gray-50 border-gray-100"}`}><h4 className="flex items-center gap-2 text-[10px] md:text-xs font-bold uppercase tracking-widest mb-3 md:mb-4"><BookOpen size={16} /> Notes / Method</h4><p className="text-xs md:text-base opacity-80 font-light whitespace-pre-wrap leading-relaxed">{item.method}</p></div>)}
+          
+          {/* LOGIC: HIDE NOTES IN SIMPLE MODE */}
+          {!isSimple && item.method && (
+             <div className={`p-5 md:p-8 rounded-2xl border ${theme.name === 'dark' ? "bg-white/5 border-white/10" : "bg-gray-50 border-gray-100"}`}>
+                 <h4 className="flex items-center gap-2 text-[10px] md:text-xs font-bold uppercase tracking-widest mb-3 md:mb-4"><BookOpen size={16} /> Notes</h4>
+                 <p className="text-xs md:text-base opacity-80 font-light whitespace-pre-wrap leading-relaxed">{item.method}</p>
+             </div>
+          )}
+
           <div className="space-y-8 md:space-y-10">
             {item.allergens && (<div><h4 className="flex items-center gap-2 text-[10px] md:text-xs font-bold uppercase tracking-widest text-red-400 mb-3 md:mb-4"><AlertTriangle size={14} /> Allergens</h4><div className="flex flex-wrap gap-2 md:gap-3">{item.allergens.split(',').map(tag => (<button key={tag} onClick={() => openSearch(tag.trim())} className={`flex items-center gap-1.5 md:gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full text-[10px] md:text-xs font-bold border transition-all active:scale-95 ${theme.name === 'dark' ? 'border-red-900/50 text-red-200 bg-red-900/10' : 'border-red-200 text-red-600 bg-red-50'}`}>{getAllergenIcon(tag)} {tag.trim()}</button>))}</div></div>)}
-            {item.trivia && (<div className="pt-2 md:pt-4"><h4 className="flex items-center justify-center gap-2 text-[10px] md:text-xs font-bold uppercase tracking-widest mb-4 md:mb-6"><Sparkles size={14} className="text-yellow-500" /> Trivia</h4><ul className="space-y-3 md:space-y-4">{item.trivia.split('.').filter(t => t.trim().length > 0).map((t, i) => (<li key={i} className="flex flex-col items-center text-center gap-2 md:gap-3 text-xs md:text-sm opacity-90 italic bg-yellow-500/10 p-5 md:p-8 rounded-2xl border border-yellow-500/20"><span className="text-yellow-500 text-lg md:text-xl">✨</span><span className="leading-relaxed">{t.trim()}</span></li>))}</ul></div>)}
+            
+            {/* LOGIC: HIDE TRIVIA IN SIMPLE MODE */}
+            {!isSimple && item.trivia && (
+                <div className="pt-2 md:pt-4">
+                    <h4 className="flex items-center justify-center gap-2 text-[10px] md:text-xs font-bold uppercase tracking-widest mb-4 md:mb-6"><Sparkles size={14} className="text-yellow-500" /> Trivia</h4>
+                    <ul className="space-y-3 md:space-y-4">{item.trivia.split('.').filter(t => t.trim().length > 0).map((t, i) => (<li key={i} className="flex flex-col items-center text-center gap-2 md:gap-3 text-xs md:text-sm opacity-90 italic bg-yellow-500/10 p-5 md:p-8 rounded-2xl border border-yellow-500/20"><span className="text-yellow-500 text-lg md:text-xl">✨</span><span className="leading-relaxed">{t.trim()}</span></li>))}</ul>
+                </div>
+            )}
           </div>
         </div>
       </div>
