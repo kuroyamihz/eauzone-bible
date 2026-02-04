@@ -144,12 +144,12 @@ const GlobalStyles = ({ theme }) => (
 
 // --- 2. DATA CONSTANTS ---
 
-const SITE_STRUCTURE = { 
-  // Updated Structure: Grouped Starters, Expanded Sushi
-  "Food": ["Starters", "Sushi", "Mains", "Kids", "Desserts"], 
-  "Beverage": ["Coffee & Tea", "Soft-Drinks", "Mocktails", "Cocktails", "Spirits", "Beers", "Wines"], 
-  "Misc": ["HACCP", "Floor-Plan", "FAQ"] 
-};
+const SITE_STRUCTURE = {
+
+  "Food": ["Soups", "Salads", "Sushi", "Bites", "Mains", "Kids", "Desserts"],
+  "Beverage": ["Coffee & Tea", "Soft-Drinks", "Mocktails", "Cocktails", "Spirits", "Beers", "Wines"],
+  "Misc": ["HACCP", "Floor-Plan", "FAQ"]
+  };
 
 const SUBCATEGORIES = {
     // UPDATED MAINS
@@ -160,7 +160,6 @@ const SUBCATEGORIES = {
     
     // SUSHI OVERHAUL
     "Sushi": ["Maki", "Rolls", "Sashimi", "Nigiri", "Sharing"],
-
     "Wines": ["Housepouring", "Red", "White", "Rose", "Sparkling", "Champagne", "Sake"],
     "Spirits": ["Housepouring", "Gin", "Vodka", "Whisky", "Rum", "Tequila", "Shochu", "Liqueur"],
     "Cocktails": ["Signature", "Classics"],
