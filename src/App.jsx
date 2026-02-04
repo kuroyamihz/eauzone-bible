@@ -146,7 +146,7 @@ const GlobalStyles = ({ theme }) => (
 
 const SITE_STRUCTURE = {
 
-  "Food": ["Soups", "Starters", "Sushi", "Bites", "Mains", "Kids", "Desserts"],
+  "Food": ["Soups", "Salads", "Sushi", "Bites", "Mains", "Kids", "Desserts"],
   "Beverage": ["Coffee & Tea", "Soft-Drinks", "Mocktails", "Cocktails", "Spirits", "Beers", "Wines"],
   "Misc": ["HACCP", "Floor-Plan", "FAQ"]
   };
@@ -176,9 +176,9 @@ const DESCRIPTIONS = {
   "Soups": "Warm, comforting bowls rich with Asian aromatics and depth.",
   "Bites": "Small plates with big personality. Perfect for sharing.",
   // --- STARTERS & SALADS ---
-  "Starters": "A curated beginning. Light bites and vibrant greens.",
-  "Starters-Starters": "Small plates with big personality. Perfect for opening the palate.",
-  "Starters-Salads": "Crisp, organic greens meet bold Asian dressings. A fresh start.",
+  "Salads": "A curated beginning. Light bites and vibrant greens.",
+  "Salads-Starters": "Small plates with big personality. Perfect for opening the palate.",
+  "Salads-Salads": "Crisp, organic greens meet bold Asian dressings. A fresh start.",
   
   // --- SUSHI OVERHAUL ---
   "Sushi": "Precision cuts, vinegared rice, and the ocean's finest catch.",
@@ -246,9 +246,9 @@ const getBackground = (category, subType) => {
   const MAP = {
       "Soups": "https://unsplash.com/photos/a-bowl-of-soup-on-a-wooden-table-ZrtDZRfxwog",
       // Starters
-      "Starters": "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?auto=format&fit=crop&q=80",
-      "Starters-Salads": "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&q=80",
-      "Starters-Starters": "https://images.unsplash.com/photo-1541544741938-0af808871cc0?auto=format&fit=crop&q=80",
+      "Salads": "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?auto=format&fit=crop&q=80",
+      "Salads-Salads": "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&q=80",
+      "Salads-Starters": "https://images.unsplash.com/photo-1541544741938-0af808871cc0?auto=format&fit=crop&q=80",
       
       // Sushi (New)
       "Sushi": "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?auto=format&fit=crop&q=80",
