@@ -770,56 +770,39 @@ const HomePage = ({ openSearch, theme }) => {
 
 const CategoryPage = ({ isAdmin, showToast, theme }) => {
   const { id } = useParams();
-  const location = useLocation(); // Gets current location to force refresh
-  
   const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(true); // Loading state
   const [showAdd, setShowAdd] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [filter, setFilter] = useState("All");
   const [deleteId, setDeleteId] = useState(null);
-  const [refreshKey, setRefreshKey] = useState(0);
 
   const subs = SUBCATEGORIES[id] || [];
   const hasSubs = subs.length > 0;
+  // Dynamic description based on filter
   const description = DESCRIPTIONS[`${id}-${filter}`] || DESCRIPTIONS[id] || "Curated selection.";
   const bgImage = getBackground(id, filter !== "All" ? filter : "");
 
   const fetchItems = async () => {
-    try {
-        setLoading(true);
-        setItems([]); // WIPE OLD DATA IMMEDIATELY
-        
-        const q = query(collection(db, "menu-items"), where("subCategory", "==", id));
-        const snapshot = await getDocs(q);
-        const fetched = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        setItems(fetched);
-    } catch (err) {
-        console.error("Error:", err);
-    } finally {
-        setLoading(false);
-    }
+    const q = query(collection(db, "menu-items"), where("subCategory", "==", id));
+    const snapshot = await getDocs(q);
+    setItems(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
   };
 
-  // REFRESH LOGIC: Runs when ID changes, Button clicked, or URL changes
   useEffect(() => {
     fetchItems();
     setFilter("All");
-  }, [id, refreshKey, location.key]);
+  }, [id]);
 
   const handleDelete = async () => {
     if (deleteId) {
-      // 1. Instant Visual Removal
-      setItems(prev => prev.filter(item => item.id !== deleteId));
-      
-      // 2. Database Removal
       await deleteDoc(doc(db, "menu-items", deleteId));
-      
-      showToast("Item Deleted", "success");
+      fetchItems();
+      showToast("Deleted", "success");
       setDeleteId(null);
     }
   };
 
+  // Filter logic supports arrays of types now
   const displayedItems = hasSubs && filter !== "All" 
     ? items.filter((i) => (i.types && i.types.includes(filter)) || i.type === filter) 
     : items;
@@ -857,74 +840,53 @@ const CategoryPage = ({ isAdmin, showToast, theme }) => {
           </div>
         )}
 
-        <div className="flex justify-center md:justify-end mb-10 gap-3">
+        <div className="flex justify-center md:justify-end mb-10">
           {isAdmin && !showAdd && !editingItem && (
-            <>
-                {/* REFRESH BUTTON */}
-                <button onClick={() => setRefreshKey(k => k + 1)} className={`p-3 rounded-full ${theme.cardBg} shadow-lg hover:rotate-180 transition-all duration-500`} title="Force Refresh">
-                    <Loader2 size={16} className={theme.textMuted}/>
-                </button>
-                <button onClick={() => setShowAdd(true)} className={`${theme.accentBg} text-white px-6 py-2.5 md:px-8 md:py-3 rounded-full text-xs md:text-sm font-bold shadow-lg hover:-translate-y-1 transition-all flex items-center gap-2`}>
-                    <Plus size={16} /> Add New
-                </button>
-            </>
+            <button onClick={() => setShowAdd(true)} className={`${theme.accentBg} text-white px-6 py-2.5 md:px-8 md:py-3 rounded-full text-xs md:text-sm font-bold shadow-lg hover:-translate-y-1 transition-all flex items-center gap-2`}><Plus size={16} /> Add New</button>
           )}
         </div>
 
-        {loading ? (
-             <div className="flex justify-center py-20"><Loader2 className="animate-spin opacity-50" size={40}/></div>
-        ) : (
-             <>
-                {(showAdd || editingItem) && (
-                  <div className="mb-12 animate-scale-in">
-                    <AddItemForm category={id} onCancel={() => { setShowAdd(false); setEditingItem(null); }} onRefresh={() => setRefreshKey(k => k + 1)} showToast={showToast} theme={theme} initialData={editingItem} />
+        {(showAdd || editingItem) && (
+          <div className="mb-12 animate-scale-in">
+            <AddItemForm category={id} onCancel={() => { setShowAdd(false); setEditingItem(null); }} onRefresh={fetchItems} showToast={showToast} theme={theme} initialData={editingItem} />
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-10">
+          {displayedItems.map((item, i) => (
+            <Link to={`/item/${item.id}`} key={item.id} className="block group animate-fade-in-up" style={{ animationDelay: `${i * 100}ms` }}>
+              <div className={`relative h-72 md:h-80 ${theme.cardBg} rounded-2xl overflow-hidden mb-4 border shadow-lg group-hover:shadow-2xl transition-all duration-500 group-hover:-translate-y-2 ${theme.name === "dark" ? "border-white/5" : "border-gray-100"}`}>
+                {item.image ? (
+                  <img src={item.image} className="w-full h-full object-cover group-hover:scale-110 transition duration-1000" alt={item.name} />
+                ) : (
+                  <div className="flex items-center justify-center h-full opacity-10"><ImageIcon size={40} /></div>
+                )}
+                {isAdmin && (
+                  <div className="absolute top-3 right-3 flex gap-2 z-30 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button onClick={(e) => { e.preventDefault(); setEditingItem(item); }} className="bg-blue-600 text-white p-2 rounded-full shadow-lg hover:scale-110 transition"><Edit2 size={14} /></button>
+                    <button onClick={(e) => { e.preventDefault(); setDeleteId(item.id); }} className="bg-red-600 text-white p-2 rounded-full shadow-lg hover:scale-110 transition"><Trash2 size={14} /></button>
                   </div>
                 )}
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-10">
-                  {displayedItems.map((item, i) => (
-                    <Link to={`/item/${item.id}`} key={item.id} className="block group animate-fade-in-up" style={{ animationDelay: `${i * 100}ms` }}>
-                      <div className={`relative h-72 md:h-80 ${theme.cardBg} rounded-2xl overflow-hidden mb-4 border shadow-lg group-hover:shadow-2xl transition-all duration-500 group-hover:-translate-y-2 ${theme.name === "dark" ? "border-white/5" : "border-gray-100"}`}>
-                        {item.image ? (
-                          <img src={item.image} className="w-full h-full object-cover group-hover:scale-110 transition duration-1000" alt={item.name} />
-                        ) : (
-                          <div className="flex items-center justify-center h-full opacity-10"><ImageIcon size={40} /></div>
-                        )}
-                        
-                        {/* --- X-RAY MODE: ADMIN CONTROLS & ID DISPLAY --- */}
-                        {isAdmin && (
-                          <div className="absolute top-3 right-3 flex flex-col items-end gap-2 z-30 opacity-100"> 
-                            <div className="flex gap-2">
-                                <button onClick={(e) => { e.preventDefault(); setEditingItem(item); }} className="bg-blue-600 text-white p-2 rounded-full shadow-lg hover:scale-110 transition"><Edit2 size={14} /></button>
-                                <button onClick={(e) => { e.preventDefault(); setDeleteId(item.id); }} className="bg-red-600 text-white p-2 rounded-full shadow-lg hover:scale-110 transition"><Trash2 size={14} /></button>
-                            </div>
-                            {/* THIS RED BOX SHOWS THE UNIQUE ID to spot duplicates */}
-                            <span className="bg-red-600/90 text-white text-[10px] font-mono px-2 py-1 rounded shadow-sm border border-red-400">
-                                ID: {item.id.slice(0, 5)}...
-                            </span>
-                          </div>
-                        )}
-                        
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-60 pointer-events-none"></div>
-                        <div className="absolute bottom-5 left-5 right-5 flex justify-between items-end">
-                          <div className="flex flex-col items-start">
-                             <h3 className="text-xl md:text-2xl font-serif text-white leading-tight drop-shadow-md">{item.name}</h3>
-                             {item.body && <span className="text-[10px] uppercase tracking-widest text-white/70 mt-1">{item.body}</span>}
-                          </div>
-                          <span className="text-sm md:text-base font-light text-white bg-white/10 backdrop-blur-md px-3 py-1 rounded-lg border border-white/20">
-                            {(item.priceGlass && item.priceGlass > 0) ? (
-                                <span className="text-xs font-bold">{item.priceGlass} <span className="opacity-50 text-[10px] font-normal">/</span> {item.priceBottle}</span>
-                            ) : (
-                                item.price
-                            )}
-                          </span>
-                        </div>
-                      </div>
-                    </Link>
-                  ))}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-60 pointer-events-none"></div>
+                <div className="absolute bottom-5 left-5 right-5 flex justify-between items-end">
+                  <div className="flex flex-col items-start">
+                     <h3 className="text-xl md:text-2xl font-serif text-white leading-tight drop-shadow-md">{item.name}</h3>
+                     {/* WINE BODY INDICATOR ON CARD */}
+                     {item.body && <span className="text-[10px] uppercase tracking-widest text-white/70 mt-1">{item.body}</span>}
+                  </div>
+                  <span className="text-sm md:text-base font-light text-white bg-white/10 backdrop-blur-md px-3 py-1 rounded-lg border border-white/20">
+                    {/* Display logic for housepouring pricing on card */}
+                    {(item.priceGlass && item.priceGlass > 0) ? (
+                        <span className="text-xs font-bold">{item.priceGlass} <span className="opacity-50 text-[10px] font-normal">/</span> {item.priceBottle}</span>
+                    ) : (
+                        item.price
+                    )}
+                  </span>
                 </div>
-             </>
-        )}
+              </div>
+            </Link>
+          ))}
+        </div>
       </div>
       <ConfirmModal isOpen={!!deleteId} onClose={() => setDeleteId(null)} onConfirm={handleDelete} title="Delete Item" message="Are you sure?" theme={theme} />
       <Footer theme={theme} />
