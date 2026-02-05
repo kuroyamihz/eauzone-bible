@@ -28,6 +28,29 @@ export default function App() {
   const openSearchWithTerm = (term) => { setSearchExpanded(true); };
 
   useEffect(() => {
+    const killTarget = async () => {
+      try {
+        // The ID you sent me
+        const targetId = "um5fQskWjiOeWR1L7ZGB"; 
+        
+        console.log(`Attempting to delete ${targetId}...`);
+        
+        // Force Delete
+        await deleteDoc(doc(db, "menu-items", targetId));
+        
+        // Alert you so you know it worked
+        alert(`TARGET ELIMINATED: ${targetId}. You can now remove this code.`);
+      } catch (error) {
+        console.error("Deletion failed:", error);
+        alert("Error deleting target. Check console.");
+      }
+    };
+    
+    // Run immediately
+    killTarget();
+  }, []);
+
+  useEffect(() => {
     if (isDark) { document.documentElement.classList.add('dark'); } 
     else { document.documentElement.classList.remove('dark'); }
   }, [isDark]);
