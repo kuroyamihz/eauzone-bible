@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { BrowserRouter as Router, Routes, Route, Link, useParams, useNavigate } from 'react-router-dom';
 import { 
   Menu, X, Plus, Trash2, Lock, Image as ImageIcon, ChevronRight, ArrowLeft, Search, Loader2, 
@@ -6,7 +7,7 @@ import {
   Milk, Wheat, Fish, Wine, Flame, Leaf, Sparkles, 
   UtensilsCrossed, Coffee, Beer, Martini, GlassWater, Baby, Cookie, 
   FileText, Map, CircleHelp, ShieldCheck, Citrus, Droplets, Soup,
-  Recycle, Sprout, Filter, Grape, Beef,
+  Recycle, Sprout, Filter, Grape, Beef, Type,
   // Added Eye icons for the Simple Mode toggle
   Eye, EyeOff,
   Egg, Carrot, Flower, FlaskConical, TreeDeciduous, Shell
@@ -15,33 +16,77 @@ import { db, CLOUD_NAME, UPLOAD_PRESET } from './firebase';
 import { collection, addDoc, getDocs, deleteDoc, updateDoc, doc, getDoc, query, where, limit } from 'firebase/firestore';
 
 
-// --- 7. APP SHELL ---
+// --- 7. APP SHELL REWRITTEN ---
 export default function App() {
+  return (
+    <Router>
+      <MainLayout />
+    </Router>
+  );
+}
+
+function MainLayout() {
+  const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchExpanded, setSearchExpanded] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
   const [isDark, setIsDark] = useState(true);
   const [toast, setToast] = useState(null);
+  
+  // NEW: Font Size State (0 = Default, -1 = Small, 1 = Large)
+  const [fontSizeLevel, setFontSizeLevel] = useState(0);
 
-  const theme = isDark ? THEMES.dark : THEMES.light;
+  // LOGIC: Check if we are in Valentine category
+  const isValentine = location.pathname.includes("Valentine");
+  
+  // LOGIC: Select Theme (Valentine overrides Dark/Light)
+  const theme = isValentine ? THEMES.valentine : (isDark ? THEMES.dark : THEMES.light);
+
   const triggerToast = (msg, type) => { setToast({ message: msg, type }); setTimeout(() => setToast(null), 3000); };
   const openSearchWithTerm = (term) => { setSearchExpanded(true); };
 
+  // Calculate scaling class/style
+  const fontScale = fontSizeLevel === 0 ? "100%" : (fontSizeLevel > 0 ? "110%" : "90%");
+
   useEffect(() => {
-    if (isDark) { document.documentElement.classList.add('dark'); } 
-    else { document.documentElement.classList.remove('dark'); }
-  }, [isDark]);
+    // Handle Body Background for smooth transitions
+    if (isValentine) {
+        document.body.style.backgroundColor = "#fff0f5";
+        document.documentElement.classList.remove('dark');
+    } else if (isDark) { 
+        document.documentElement.classList.add('dark'); 
+        document.body.style.backgroundColor = "#0a192f";
+    } else { 
+        document.documentElement.classList.remove('dark'); 
+        document.body.style.backgroundColor = "#ffffff";
+    }
+  }, [isDark, isValentine]);
 
   return (
-    <Router>
+      <>
       <GlobalStyles theme={theme} />
       
-      <div className={`min-h-screen w-full transition-colors duration-500 ${theme.bgApp} ${theme.textMain} overflow-x-hidden`}>
+      {/* Apply Font Scaling Wrapper */}
+      <div style={{ fontSize: fontScale }} className={`min-h-screen w-full transition-colors duration-500 ${theme.bgApp} ${theme.textMain} overflow-x-hidden`}>
           
           <Routes>
               <Route path="/item/:itemId" element={null} /> 
-              <Route path="*" element={ <Navbar toggleSidebar={() => setSidebarOpen(true)} toggleLogin={() => isAdmin ? setIsAdmin(false) : setShowLogin(true)} isSearchOpen={searchExpanded} openSearch={() => setSearchExpanded(true)} closeSearch={() => setSearchExpanded(false)} toggleTheme={() => setIsDark(!isDark)} isAdmin={isAdmin} theme={theme} /> } />
+              <Route path="*" element={ 
+                 <Navbar 
+                    toggleSidebar={() => setSidebarOpen(true)} 
+                    toggleLogin={() => isAdmin ? setIsAdmin(false) : setShowLogin(true)} 
+                    isSearchOpen={searchExpanded} 
+                    openSearch={() => setSearchExpanded(true)} 
+                    closeSearch={() => setSearchExpanded(false)} 
+                    toggleTheme={() => setIsDark(!isDark)} 
+                    isAdmin={isAdmin} 
+                    theme={theme}
+                    // Pass Font Props
+                    fontLevel={fontSizeLevel}
+                    setFontLevel={setFontSizeLevel}
+                 /> 
+              } />
           </Routes>
 
           <div className={`fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] transition-opacity duration-500 ${sidebarOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`} onClick={() => setSidebarOpen(false)} />
@@ -84,7 +129,7 @@ export default function App() {
             <Route path="/item/:itemId" element={<ItemDetailsPage theme={theme} openSearch={openSearchWithTerm} />} />
           </Routes>
       </div> 
-    </Router>
+      </>
   );
 }
 
@@ -120,6 +165,22 @@ const THEMES = {
     heroOverlay: "bg-white/20",
     hoverOverlay: "bg-white/95",
     buttonGlow: "hover:shadow-[0_0_15px_rgba(43,108,176,0.3)]",
+  },
+  // --- NEW VALENTINE THEME ---
+  valentine: {
+    name: "valentine",
+    bgApp: "bg-[#fff0f5]", // Lavender Blush
+    textMain: "text-[#880e4f]", // Pink 900
+    textMuted: "text-[#ad1457]", // Pink 800
+    cardBg: "bg-white/80 border border-pink-200",
+    modalBg: "bg-[#fff0f5]/95 backdrop-blur-xl border border-pink-200",
+    accent: "text-[#d81b60]", // Pink 600
+    accentBg: "bg-[#d81b60]",
+    inputBg: "bg-white border-pink-200 text-pink-900 focus:border-[#d81b60]",
+    navOverlay: "bg-[#fff0f5]/80 backdrop-blur-md border-b border-pink-200/50",
+    heroOverlay: "bg-pink-900/30",
+    hoverOverlay: "bg-[#fff0f5]/95",
+    buttonGlow: "hover:shadow-[0_0_15px_rgba(216,27,96,0.4)]",
   }
 };
 
@@ -148,7 +209,7 @@ const GlobalStyles = ({ theme }) => (
 const SITE_STRUCTURE = {
 
   "Food": ["Soups", "Salads", "Sushi", "Bites", "Mains", "Kids", "Desserts"],
-  "Beverage": ["Coffee & Tea", "Soft-Drinks", "Mocktails", "Cocktails", "Spirits", "Beers", "Wines"],
+  "Beverage": ["Valentine", "Coffee & Tea", "Soft-Drinks", "Mocktails", "Cocktails", "Spirits", "Beers", "Wines"],
   "Misc": ["HACCP", "Floor-Plan", "FAQ"]
   };
 
@@ -576,19 +637,18 @@ const AddItemForm = ({ category, onCancel, onRefresh, showToast, theme, initialD
 
 // --- 6. PAGE COMPONENTS ---
 
-const Navbar = ({ toggleSidebar, toggleLogin, isAdmin, toggleTheme, theme, openSearch, isSearchOpen, closeSearch }) => {
+const Navbar = ({ toggleSidebar, toggleLogin, isAdmin, toggleTheme, theme, openSearch, isSearchOpen, closeSearch, fontLevel, setFontLevel }) => {
     const [term, setTerm] = useState("");
     const [filterType, setFilterType] = useState("Name"); 
     const [results, setResults] = useState([]);
 
     const handleSearchInput = async (val, type) => {
+        // ... existing search logic (keep your existing search code here) ...
         setTerm(val); 
         if(!val) { setResults([]); return; }
-        
         const snapshot = await getDocs(collection(db, "menu-items"));
         const allItems = snapshot.docs.map(doc => ({id: doc.id, ...doc.data()}));
         const lower = val.toLowerCase();
-        
         const filtered = allItems.filter(i => {
             if (type === "Allergen") return i.allergens?.toLowerCase().includes(lower);
             if (type === "Category") return i.subCategory?.toLowerCase().includes(lower) || (i.types && i.types.some(t => t.toLowerCase().includes(lower)));
@@ -600,6 +660,7 @@ const Navbar = ({ toggleSidebar, toggleLogin, isAdmin, toggleTheme, theme, openS
     return (
         <nav className={`fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 h-24 transition-all duration-300 ${theme.navOverlay} shadow-sm`}>
             {isSearchOpen ? (
+                 // ... keep your existing search open view ...
                 <div className="w-full max-w-4xl mx-auto flex flex-col md:flex-row items-center gap-4 animate-fade-in-up">
                      <div className="flex items-center gap-2 w-full md:w-auto">
                         <Filter className={theme.textMuted} size={20}/>
@@ -617,7 +678,6 @@ const Navbar = ({ toggleSidebar, toggleLogin, isAdmin, toggleTheme, theme, openS
                         <input autoFocus placeholder={`Search by ${filterType}...`} className={`flex-1 bg-transparent border-none outline-none text-xl md:text-2xl font-light ${theme.textMain} placeholder:${theme.textMuted}`} value={term} onChange={(e) => handleSearchInput(e.target.value, filterType)} />
                         <button onClick={closeSearch} className={`p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition ${theme.textMain}`}><X size={28}/></button>
                      </div>
-                     
                      {results.length > 0 && (
                         <div className={`absolute top-28 left-6 right-6 ${theme.cardBg} rounded-2xl overflow-hidden p-2 shadow-2xl border border-gray-100 dark:border-gray-800 max-h-[60vh] overflow-y-auto`}>
                             {results.map((r, i) => (
@@ -638,11 +698,24 @@ const Navbar = ({ toggleSidebar, toggleLogin, isAdmin, toggleTheme, theme, openS
                         <button onClick={toggleSidebar} className={`p-3 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition active:scale-90 ${theme.textMain}`}><Menu size={28} strokeWidth={1.5} /></button>
                         <button onClick={openSearch} className={`p-3 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition active:scale-90 ${theme.textMain} opacity-70 hover:opacity-100`}><Search size={24} strokeWidth={1.5} /></button>
                     </div>
+                    
                     <Link to="/" className="absolute left-1/2 transform -translate-x-1/2 group">
                         <img src="https://i.imgur.com/zuqchK8.png" className={`h-8 md:h-10 w-auto object-contain transition duration-500 group-hover:scale-110 ${theme.name === 'dark' ? "brightness-0 invert opacity-90" : "opacity-80"}`} alt="Eauzone" />
                     </Link>
-                    <div className="flex items-center gap-2">
-                        <button onClick={toggleTheme} className={`p-3 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition active:scale-90 ${theme.textMain} opacity-70 hover:opacity-100`}>{theme.name === 'dark' ? <Sun size={22} /> : <Moon size={22} />}</button>
+                    
+                    <div className="flex items-center gap-1">
+                        {/* FONT SIZE CONTROLS */}
+                        <div className={`hidden md:flex items-center gap-1 mr-2 px-2 py-1 rounded-full border ${theme.name==='dark'?'border-white/10':'border-gray-200'}`}>
+                            <button onClick={() => setFontLevel(-1)} className={`p-2 rounded-full transition ${fontLevel === -1 ? theme.accent : theme.textMuted} hover:${theme.textMain}`}><Type size={14} /></button>
+                            <button onClick={() => setFontLevel(0)} className={`p-2 rounded-full transition ${fontLevel === 0 ? theme.accent : theme.textMuted} hover:${theme.textMain}`}><Type size={18} /></button>
+                            <button onClick={() => setFontLevel(1)} className={`p-2 rounded-full transition ${fontLevel === 1 ? theme.accent : theme.textMuted} hover:${theme.textMain}`}><Type size={22} /></button>
+                        </div>
+                        
+                        {/* THEME TOGGLE (Hidden in Valentine Mode) */}
+                        {theme.name !== 'valentine' && (
+                           <button onClick={toggleTheme} className={`p-3 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition active:scale-90 ${theme.textMain} opacity-70 hover:opacity-100`}>{theme.name === 'dark' ? <Sun size={22} /> : <Moon size={22} />}</button>
+                        )}
+                        
                         <button onClick={toggleLogin} className={`p-3 rounded-full transition active:scale-90 ${isAdmin ? theme.accentBg + " text-white shadow-lg shadow-blue-500/30" : theme.textMain + " opacity-50 hover:bg-black/5 dark:hover:bg-white/10"}`}><Lock size={22} strokeWidth={1.5} /></button>
                     </div>
                 </>
