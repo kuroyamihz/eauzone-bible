@@ -14,6 +14,7 @@ import {
 import { db, CLOUD_NAME, UPLOAD_PRESET } from './firebase';
 import { collection, addDoc, getDocs, deleteDoc, updateDoc, doc, getDoc, query, where, limit } from 'firebase/firestore';
 
+
 // --- 7. APP SHELL ---
 export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
