@@ -27,39 +27,45 @@ export default function App() {
 
 function MainLayout() {
   const location = useLocation();
+  
+  // --- UI STATE ---
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchExpanded, setSearchExpanded] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
   const [isDark, setIsDark] = useState(true);
   const [toast, setToast] = useState(null);
-  
-  // NEW: Font Size State (0 = Default, -1 = Small, 1 = Large)
+
+  // --- FONT SIZE STATE (From Old Code) ---
   const [fontSizeLevel, setFontSizeLevel] = useState(0);
 
-  // LOGIC: Check if we are in Valentine category
-  const isValentine = location.pathname.includes("Valentine");
+  // --- VALENTINE STATE (From New Code) ---
+  const [isValentineItem, setIsValentineItem] = useState(false);
+
+  // --- COMBINED LOGIC ---
+  // 1. Check if URL has Valentine OR if Item Page says it is Valentine
+  const isValentine = location.pathname.includes("Valentine") || isValentineItem;
   
-  // LOGIC: Select Theme (Valentine overrides Dark/Light)
+  // 2. Select Theme based on priority
   const theme = isValentine ? THEMES.valentine : (isDark ? THEMES.dark : THEMES.light);
+
+  // 3. Calculate Font Scale
+  const fontScale = fontSizeLevel === 0 ? "100%" : (fontSizeLevel > 0 ? "110%" : "90%");
 
   const triggerToast = (msg, type) => { setToast({ message: msg, type }); setTimeout(() => setToast(null), 3000); };
   const openSearchWithTerm = (term) => { setSearchExpanded(true); };
 
-  // Calculate scaling class/style
-  const fontScale = fontSizeLevel === 0 ? "100%" : (fontSizeLevel > 0 ? "110%" : "90%");
-
   useEffect(() => {
     // Handle Body Background for smooth transitions
     if (isValentine) {
-        document.body.style.backgroundColor = "#fff0f5";
+        document.body.style.backgroundColor = "#fff0f5"; // Pink
         document.documentElement.classList.remove('dark');
     } else if (isDark) { 
         document.documentElement.classList.add('dark'); 
-        document.body.style.backgroundColor = "#0a192f";
+        document.body.style.backgroundColor = "#0a192f"; // Dark Blue
     } else { 
         document.documentElement.classList.remove('dark'); 
-        document.body.style.backgroundColor = "#ffffff";
+        document.body.style.backgroundColor = "#ffffff"; // White
     }
   }, [isDark, isValentine]);
 
@@ -67,11 +73,14 @@ function MainLayout() {
       <>
       <GlobalStyles theme={theme} />
       
-      {/* Apply Font Scaling Wrapper */}
+      {/* Apply Font Scaling to the entire app wrapper */}
       <div style={{ fontSize: fontScale }} className={`min-h-screen w-full transition-colors duration-500 ${theme.bgApp} ${theme.textMain} overflow-x-hidden`}>
           
+          {/* --- TOP ROUTER: Decides between Item Page OR Navbar --- */}
           <Routes>
-              <Route path="/item/:itemId" element={null} /> 
+              {/* Pass setIsValentineItem so the item page can trigger the pink theme */}
+              <Route path="/item/:itemId" element={<ItemDetailsPage theme={theme} openSearch={openSearchWithTerm} setIsValentineItem={setIsValentineItem} />} />
+              
               <Route path="*" element={ 
                  <Navbar 
                     toggleSidebar={() => setSidebarOpen(true)} 
@@ -82,13 +91,14 @@ function MainLayout() {
                     toggleTheme={() => setIsDark(!isDark)} 
                     isAdmin={isAdmin} 
                     theme={theme}
-                    // Pass Font Props
+                    // Pass Font Props to Navbar
                     fontLevel={fontSizeLevel}
                     setFontLevel={setFontSizeLevel}
                  /> 
               } />
           </Routes>
 
+          {/* --- SIDEBAR & MODALS (Always rendered but hidden) --- */}
           <div className={`fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] transition-opacity duration-500 ${sidebarOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`} onClick={() => setSidebarOpen(false)} />
           
           <div className={`fixed inset-y-0 left-0 w-[85vw] md:w-80 ${theme.bgApp} border-r shadow-2xl ${theme.name==='dark'?'border-[#233554]':'border-gray-200'} transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-500 cubic-bezier(0.16, 1, 0.3, 1) z-[61] p-8 flex flex-col`}>
@@ -123,10 +133,11 @@ function MainLayout() {
           <LoginModal isOpen={showLogin} onClose={() => setShowLogin(false)} onLogin={setIsAdmin} showToast={triggerToast} theme={theme} />
           <Toast message={toast?.message} type={toast?.type} />
 
+          {/* --- BOTTOM ROUTER: Standard Pages --- */}
           <Routes>
             <Route path="/" element={<HomePage openSearch={() => setSearchExpanded(true)} theme={theme} />} />
             <Route path="/category/:id" element={<CategoryPage isAdmin={isAdmin} showToast={triggerToast} theme={theme} />} />
-            <Route path="/item/:itemId" element={<ItemDetailsPage theme={theme} openSearch={openSearchWithTerm} />} />
+            {/* Note: /item/:itemId is handled in the Top Router to hide the Navbar */}
           </Routes>
       </div> 
       </>
@@ -968,20 +979,32 @@ const CategoryPage = ({ isAdmin, showToast, theme }) => {
   );
 };
 
-const ItemDetailsPage = ({ theme, openSearch }) => {
+const ItemDetailsPage = ({ theme, openSearch, setIsValentineItem }) => {
   const { itemId } = useParams();
   const navigate = useNavigate();
   const [item, setItem] = useState(null);
-  // NEW: State for Toggle "Simple Mode"
   const [isSimple, setIsSimple] = useState(false);
 
   useEffect(() => {
     const f = async () => {
       const s = await getDoc(doc(db, "menu-items", itemId));
-      if (s.exists()) setItem({ id: s.id, ...s.data() });
+      if (s.exists()) {
+          const data = s.data();
+          setItem({ id: s.id, ...data });
+          
+          // --- LOGIC: IF ITEM IS VALENTINE, TELL THE APP TO TURN PINK ---
+          if (data.subCategory === "Valentine" || (data.subCategory && data.subCategory.includes("Valentine"))) {
+              setIsValentineItem(true);
+          } else {
+              setIsValentineItem(false);
+          }
+      }
     };
     f();
-  }, [itemId]);
+    
+    // Cleanup: When you leave this page, turn off Pink Mode
+    return () => setIsValentineItem(false);
+  }, [itemId, setIsValentineItem]);
 
   if (!item) return (
     <div className={`min-h-screen ${theme.bgApp} flex items-center justify-center`}>
@@ -1005,7 +1028,6 @@ const ItemDetailsPage = ({ theme, openSearch }) => {
 
       <div className="w-full md:w-1/2 p-6 md:p-20 flex flex-col animate-slide-in">
         
-        {/* Header Row: Badges + Toggle */}
         <div className="flex justify-between items-start mb-4 md:mb-6 animate-fade-in-up stagger-1">
             <div className="flex flex-wrap items-center gap-2">
                 <span className={`${theme.accent} tracking-[0.1em] uppercase text-[9px] md:text-xs font-bold flex items-center gap-1.5 border border-current px-2.5 py-1 rounded-full`}>
@@ -1022,7 +1044,6 @@ const ItemDetailsPage = ({ theme, openSearch }) => {
                 )}
             </div>
             
-            {/* TOGGLE BUTTON */}
             <button 
                 onClick={() => setIsSimple(!isSimple)}
                 className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all border ${isSimple ? theme.accentBg + ' text-white border-transparent' : theme.textMuted + ' border-gray-500/20'}`}
@@ -1050,7 +1071,6 @@ const ItemDetailsPage = ({ theme, openSearch }) => {
           
           {item.ingredients && (<div><h4 className={`text-[10px] md:text-xs font-bold uppercase tracking-widest ${theme.textMuted} mb-3 md:mb-4 flex items-center gap-2`}><UtensilsCrossed size={14} /> Ingredients</h4><ul className="grid grid-cols-1 gap-2 md:gap-3">{item.ingredients.split(',').map((ing, i) => (<li key={i} className="flex items-start gap-3 opacity-80 font-light text-sm md:text-base"><span className={`mt-2 w-1.5 h-1.5 rounded-full flex-shrink-0 ${theme.accentBg}`}></span><span>{ing.trim()}</span></li>))}</ul></div>)}
           
-          {/* LOGIC: HIDE NOTES IN SIMPLE MODE */}
           {!isSimple && item.method && (
              <div className={`p-5 md:p-8 rounded-2xl border ${theme.name === 'dark' ? "bg-white/5 border-white/10" : "bg-gray-50 border-gray-100"}`}>
                  <h4 className="flex items-center gap-2 text-[10px] md:text-xs font-bold uppercase tracking-widest mb-3 md:mb-4"><BookOpen size={16} /> Notes</h4>
@@ -1061,7 +1081,6 @@ const ItemDetailsPage = ({ theme, openSearch }) => {
           <div className="space-y-8 md:space-y-10">
             {item.allergens && (<div><h4 className="flex items-center gap-2 text-[10px] md:text-xs font-bold uppercase tracking-widest text-red-400 mb-3 md:mb-4"><AlertTriangle size={14} /> Allergens</h4><div className="flex flex-wrap gap-2 md:gap-3">{item.allergens.split(',').map(tag => (<button key={tag} onClick={() => openSearch(tag.trim())} className={`flex items-center gap-1.5 md:gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full text-[10px] md:text-xs font-bold border transition-all active:scale-95 ${theme.name === 'dark' ? 'border-red-900/50 text-red-200 bg-red-900/10' : 'border-red-200 text-red-600 bg-red-50'}`}>{getAllergenIcon(tag)} {tag.trim()}</button>))}</div></div>)}
             
-            {/* LOGIC: HIDE TRIVIA IN SIMPLE MODE */}
             {!isSimple && item.trivia && (
                 <div className="pt-2 md:pt-4">
                     <h4 className="flex items-center justify-center gap-2 text-[10px] md:text-xs font-bold uppercase tracking-widest mb-4 md:mb-6"><Sparkles size={14} className="text-yellow-500" /> Trivia</h4>
